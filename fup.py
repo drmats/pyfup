@@ -77,7 +77,7 @@ class View:
 
         try:
             form_file = form["file"]
-        except:
+        except KeyError:
             form_file = None
 
         if form_file != None and form_file.filename:
