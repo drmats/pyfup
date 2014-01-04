@@ -2,7 +2,8 @@
 
 Basic file upload WSGI application (python 3.x)
 
-This script brings up a simple_server from python's wsgiref
+This script brings up a simple_server from python's
+[wsgiref](http://docs.python.org/3.3/library/wsgiref.html)
 package and runs a really simple web application on it.
 It allows to upload any file using multipart/form-data encoding.
 Don't use it in production environment as it has not been
