@@ -14,3 +14,8 @@ file transfers between machines over HTTP protocol.
 ## usage
 
     python fup.py 8000
+
+
+## license
+
+BSD 2-Clause
