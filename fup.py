@@ -12,12 +12,50 @@ file transfers between machines over HTTP protocol.
 """
 
 from __future__ import print_function
-import sys, os, signal, cgi, argparse
+import sys, os, signal, cgi, argparse, textwrap
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __license__ = "BSD 2-Clause license"
+
+
+
+
+# ...
+class Markup:
+
+    """ "Static" text markup definitions. """
+
+    # simple html upload form
+    simple_upload = textwrap.dedent("""\
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>File Upload</title>
+            <style media="screen">
+                html {
+                    font-size: 14px;
+                    font-family: monospace;
+                    padding: 10px;
+                    line-height: 28px;
+                }
+            </style>
+        </head>
+        <body>
+            Upload a file:
+            <form
+                action="upload/"
+                method="post"
+                enctype="multipart/form-data"
+            >
+                <input type="file" name="file"><br>
+                <input type="submit" value="Upload File">
+            </form>
+            (<a href="info/">env. info</a>)
+            </body>
+        </html>\
+    """)
 
 
 
@@ -33,33 +71,7 @@ class View:
         return (
             "200 OK",
             [("Content-Type", "text/html; charset=utf-8")],
-            """\
-<!DOCTYPE html>
-<html>
-<head>
-    <title>File Upload</title>
-    <style media="screen">
-        html {
-            font-size: 14px;
-            font-family: monospace;
-            padding: 10px;
-            line-height: 28px;
-        }
-    </style>
-</head>
-<body>
-    Upload a file:
-    <form
-        action="upload/"
-        method="post"
-        enctype="multipart/form-data"
-    >
-        <input type="file" name="file"><br>
-        <input type="submit" value="Upload File">
-    </form>
-    (<a href="info/">env. info</a>)
-    </body>
-</html>"""
+            Markup.simple_upload
         )
 
 
