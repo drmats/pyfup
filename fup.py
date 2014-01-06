@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Basic file upload WSGI application (python 3.x).
+"""Basic file upload WSGI application (python 2.x/3.x).
 
 This script brings up a simple_server from python's wsgiref
 package and runs a really simple web application on it.
@@ -11,11 +11,12 @@ reviewed for security issues, however it's handy for ad-hoc
 file transfers between machines over HTTP protocol.
 """
 
+from __future__ import print_function
 import sys, os, cgi
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __license__ = "BSD 2-Clause license"
 
 
@@ -27,6 +28,7 @@ class View:
     """Views/actions for each URL defined in application."""
 
     # file upload page with appropriate html form
+    @staticmethod
     def index (env):
         return (
             "200 OK",
@@ -62,6 +64,7 @@ class View:
 
 
     # file upload action (called from upload form)
+    @staticmethod
     def upload (env):
         chunk_size = 1024*1024
 
@@ -85,11 +88,11 @@ class View:
             out = open(fn, "wb", buffering=0)
             for chunk in fbuffer(form_file.file):
                 out.write(chunk)
-            out.close()
             message = \
                 "The file \"" + fn + "\" " + \
                 "was uploaded successfully!"
-            bytes_read = str(form_file.bytes_read)
+            bytes_read = str(out.tell())
+            out.close()
         else:
             message = "No file was uploaded."
             bytes_read = "0"
@@ -103,6 +106,7 @@ class View:
 
 
     # show key-val environment mapping
+    @staticmethod
     def info (env):
         resp = ["%s: %s" % (key, value)
             for key, value in sorted(env.items())
@@ -148,7 +152,7 @@ class Application:
     def __call__ (self, env, start_response):
         status, headers, body = self.dispatch(env)
         body = body.encode("utf-8")
-        headers.append(("Content-Length", str(len(body))))
+        headers.append(("Content-Length", str(sys.getsizeof(body))))
         start_response(status, headers)
         return [body]
 

@@ -1,8 +1,8 @@
 # pyfup
 
-Basic file upload WSGI application (python 3.x)
+Basic file upload WSGI application (python 2.x/3.x)
 
-This script brings up a simple_server from python's
+This script brings up a simple\_server from python's
 [wsgiref](http://docs.python.org/3.3/library/wsgiref.html)
 package and runs a really simple web application on it.
 It allows to upload any file using multipart/form-data encoding.
@@ -13,7 +13,7 @@ file transfers between machines over HTTP protocol.
 
 ## usage
 
-    python fup.py 8000
+    python fup.py [PORT]
 
 
 ## license
