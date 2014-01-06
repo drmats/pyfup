@@ -25,7 +25,7 @@ __license__ = "BSD 2-Clause license"
 # ...
 class Markup:
 
-    """ "Static" text markup definitions. """
+    """"Static" text markup definitions."""
 
     # simple html upload form
     simple_upload = textwrap.dedent("""\
