@@ -30,8 +30,11 @@ class Markup:
     # simple html upload form
     simple_upload = textwrap.dedent("""\
         <!DOCTYPE html>
-        <html>
+        <html dir="ltr" lang="en-US">
         <head>
+            <meta charset="utf-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+            <meta http-equiv="content-style-type" content="text/css">
             <title>File Upload</title>
             <style media="screen">
                 html {
@@ -53,7 +56,7 @@ class Markup:
                 <input type="submit" value="Upload File">
             </form>
             (<a href="info/">env. info</a>)
-            </body>
+        </body>
         </html>\
     """)
 
