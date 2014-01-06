@@ -12,11 +12,11 @@ file transfers between machines over HTTP protocol.
 """
 
 from __future__ import print_function
-import sys, os, cgi
+import sys, os, signal, cgi
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __license__ = "BSD 2-Clause license"
 
 
@@ -25,9 +25,9 @@ __license__ = "BSD 2-Clause license"
 # ...
 class View:
 
-    """Views/actions for each URL defined in application."""
+    """Views/actions for each URL defined in an application."""
 
-    # file upload page with appropriate html form
+    # file upload page with an appropriate html form
     @staticmethod
     def index (env):
         return (
@@ -63,7 +63,7 @@ class View:
         )
 
 
-    # file upload action (called from upload form)
+    # file upload action (called from an upload form)
     @staticmethod
     def upload (env):
         chunk_size = 1024*1024
@@ -105,7 +105,7 @@ class View:
         )
 
 
-    # show key-val environment mapping
+    # show current environment (key-val mapping)
     @staticmethod
     def info (env):
         resp = ["%s: %s" % (key, value)
@@ -124,7 +124,7 @@ class View:
 # ...
 class Application:
 
-    """Base class for web application."""
+    """Base class for a web application."""
 
     # "url routing" setup
     def __init__ (self):
@@ -160,13 +160,22 @@ class Application:
 
 
 # ...
+def exit_handler (sig_num, stack_frame):
+    print("\nBye!")
+    sys.exit()
+
+
+
+
+# ...
 if __name__ == "__main__":
     try:
         port = int(sys.argv[1])
     except IndexError:
         port = 8000
+    signal.signal(signal.SIGINT, exit_handler)
     print("Hi there! (*:%s)" % str(port))
-    make_server(
+    s = make_server(
         "", port,
         Application()
     ).serve_forever()
