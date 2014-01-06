@@ -19,3 +19,10 @@ file transfers between machines over HTTP protocol.
 ## license
 
 BSD 2-Clause
+
+
+## notes
+
+The script was tested and is known to work with python
+versions 2.7.2, 2.7.3, 3.3.0, 3.3.2 and 3.3.3 on linux
+and windows.
