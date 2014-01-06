@@ -42,7 +42,7 @@ class View:
         html {
             font-size: 14px;
             font-family: monospace;
-            padding: 40px;
+            padding: 10px;
             line-height: 28px;
         }
     </style>
@@ -152,7 +152,9 @@ class Application:
     def __call__ (self, env, start_response):
         status, headers, body = self.dispatch(env)
         body = body.encode("utf-8")
-        headers.append(("Content-Length", str(sys.getsizeof(body))))
+        headers.append(
+            ("Content-Length", str(sys.getsizeof(body)))
+        )
         start_response(status, headers)
         return [body]
 
@@ -175,7 +177,7 @@ if __name__ == "__main__":
         port = 8000
     signal.signal(signal.SIGINT, exit_handler)
     print("Hi there! (*:%s)" % str(port))
-    s = make_server(
+    make_server(
         "", port,
         Application()
     ).serve_forever()
