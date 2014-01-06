@@ -12,7 +12,7 @@ file transfers between machines over HTTP protocol.
 """
 
 from __future__ import print_function
-import sys, os, signal, cgi
+import sys, os, signal, cgi, argparse
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
@@ -25,7 +25,7 @@ __license__ = "BSD 2-Clause license"
 # ...
 class View:
 
-    """Views/actions for each URL defined in an application."""
+    """Views/actions for each URL defined in the application."""
 
     # file upload page with an appropriate html form
     @staticmethod
@@ -162,22 +162,47 @@ class Application:
 
 
 # ...
-def exit_handler (sig_num, stack_frame):
-    print("\nBye!")
-    sys.exit()
+class Main:
+
+    """Main program class."""
+
+    # ...
+    def __init__ (self):
+        args = self.parse_args()
+        signal.signal(signal.SIGINT, Main.exit_handler)
+        print("Hi there! (*:%s)" % str(args.port))
+        make_server(
+            "", args.port,
+            Application()
+        ).serve_forever()
+
+
+    # ...
+    def parse_args (self):
+        argparser = argparse.ArgumentParser(
+            description="Basic file upload WSGI application.",
+            epilog="More at: https://github.com/drmats/pyfup"
+        )
+        argparser.add_argument(
+            "port", action="store", default=8000, type=int,
+            nargs="?", help="Specify alternate port [default: 8000]"
+        )
+        argparser.add_argument(
+            "-v", "--version", action="version",
+            version="%(prog)s " + __version__
+        )
+        return argparser.parse_args()
+
+
+    # ...
+    @staticmethod
+    def exit_handler (sig_num, stack_frame):
+        print("\nBye!")
+        sys.exit()
 
 
 
 
 # ...
 if __name__ == "__main__":
-    try:
-        port = int(sys.argv[1])
-    except IndexError:
-        port = 8000
-    signal.signal(signal.SIGINT, exit_handler)
-    print("Hi there! (*:%s)" % str(port))
-    make_server(
-        "", port,
-        Application()
-    ).serve_forever()
+    Main()
