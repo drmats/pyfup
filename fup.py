@@ -81,11 +81,9 @@ class View:
     # file upload action (called from an upload form)
     @staticmethod
     def upload (env):
-        chunk_size = 1024*1024
-
-        def fbuffer (f):
+        def megbuffer (f):
            while True:
-              chunk = f.read(chunk_size)
+              chunk = f.read(1024**2)
               if not chunk: break
               yield chunk
 
@@ -101,21 +99,21 @@ class View:
         if form_file != None and form_file.filename:
             fn = os.path.basename(form_file.filename)
             out = open(fn, "wb", buffering=0)
-            for chunk in fbuffer(form_file.file):
+            for chunk in megbuffer(form_file.file):
                 out.write(chunk)
             message = \
                 "The file \"" + fn + "\" " + \
                 "was uploaded successfully!"
-            bytes_read = str(out.tell())
+            bytes_read = out.tell()
             out.close()
         else:
             message = "No file was uploaded."
-            bytes_read = "0"
+            bytes_read = 0
 
         return (
             "200 OK",
             [("Content-Type", "text/plain; charset=utf-8")],
-            "Done!\n\n%s\n\nStatus:\nbytes read: %s"
+            "Done!\n\n%s\n\nStatus:\nbytes read: %u"
                 % (message, bytes_read)
         )
 
@@ -185,14 +183,14 @@ class Main:
     def __init__ (self):
         args = self.parse_args()
         signal.signal(signal.SIGINT, Main.exit_handler)
-        print("Hi there! (*:%s)" % str(args.port))
+        print("Hi there! (*:%u)" % args.port)
         make_server(
             "", args.port,
             Application()
         ).serve_forever()
 
 
-    # ...
+    # command-line argument parser
     def parse_args (self):
         argparser = argparse.ArgumentParser(
             description="Basic file upload WSGI application.",
@@ -209,7 +207,7 @@ class Main:
         return argparser.parse_args()
 
 
-    # ...
+    # SIGINT/KeyboardInterrupt handler
     @staticmethod
     def exit_handler (sig_num, stack_frame):
         print("\nBye!")
