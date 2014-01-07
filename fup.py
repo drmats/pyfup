@@ -52,7 +52,7 @@ class GzipGlue:
             isio.close()
 
 
-# based on simple "feature detection" assign compress/decompress methods
+# based on a simple "feature detection" assign compress/decompress methods
 if hasattr(gzip, "compress") and hasattr(gzip, "decompress"):
     GzipGlue.compress = staticmethod(gzip.compress)
     GzipGlue.decompress = staticmethod(gzip.decompress)
@@ -241,7 +241,7 @@ class Application:
     def __call__ (self, env, start_response):
         status, headers, body = self.dispatch(env)
         headers.append(
-            ("Content-Length", str(sys.getsizeof(body)))
+            ("Content-Length", str(len(body)))
         )
         if (
             "HTTP_ACCEPT_ENCODING" in env and
