@@ -13,7 +13,8 @@ file transfers between machines over HTTP protocol.
 
 from __future__ import print_function, absolute_import
 import sys, os, signal
-import textwrap, argparse, cgi, gzip
+import textwrap, argparse, cgi
+import base64, gzip
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
@@ -79,6 +80,7 @@ class Markup:
             <meta charset="utf-8">
             <meta http-equiv="X-UA-Compatible" content="IE=Edge">
             <meta http-equiv="content-style-type" content="text/css">
+            <link rel="icon" type="image/x-icon" href="favicon.ico">
             <title>File Upload</title>
             <style media="screen">
                 html {
@@ -102,6 +104,22 @@ class Markup:
             (<a href="info/">env. info</a>)
         </body>
         </html>\
+    """)
+
+
+    # ...
+    favicon = textwrap.dedent("""\
+        H4sIAIRbzFIC/41UPWsiYRCe1bBGRAg5OAJXRNLERgvLC3KNlhZ+4AciWohEsBA\
+        VrJSrbHIHd7/B+hovpeARKzurNDb3F7xgdFWYzLPJbjZx5RwZeZl35nHeZ56RSJ\
+        HPyQnJt4+uj4g+EpFfXEISeY7vM2Ymt9ttnI+bzebnUqnUTaVSd4VC4RGeTqfvi\
+        sVip9VqXUmOitx+v/8GZzabneXz+R/BYPDB6XQy4KyuqioHAoF/yWTyp2B8smKM\
+        RqPTbDZ76/F4dureu9fr5Wg0+tvAkNqjdrt943K5/ltrxXjpQx0MBhfS80F1iqK\
+        YZ7wFfPR6vW9GLBQKcTgcZofDYVsfi8XY5/OZfIDTRCJxb/Q0HA4ZJvGdWpmJfj\
+        eZTMwY5iJcaAZeuVzm5XLJ2+2W6/W6mVetVnm1Wun1tVqNjflgtpFIRLP+TiaT0\
+        fMWiwV3Oh2uVCr6GSYzetMT6uPx+L3dO2Hr9Zo1TdPPwvcOL9BYt9v9vo8r2Gaz\
+        0fmwcg/HG6DT6XR66ff7bfkWfG40GrZ30Cm0nsvlHMLVDfg/VD/QKbSOfYEGx+P\
+        xB5nFr0MwoFNoHfti3R9goI99b3npmaF17AtqsLfz+dzEwFvABzjFXDBb6AMag0\
+        6hdeyLdfe3X4j+uoj+OIm+Ks9Ois0fhfJ6j1zUrM6JngCTkE5/fgQAAA==\
     """)
 
 
@@ -175,6 +193,18 @@ class View:
         )
 
 
+    # ...
+    @staticmethod
+    def favicon (env):
+        return (
+            "200 OK", [
+                ("Content-Type", "image/x-icon")
+            ], GzipGlue.decompress(base64.b64decode(
+                Markup.favicon.encode("utf-8")
+            ))
+        )
+
+
 
 
 # ...
@@ -187,7 +217,8 @@ class Application:
         self.urls = {
             "/" : View.index,
             "/upload/" : View.upload,
-            "/info/" : View.info
+            "/info/" : View.info,
+            "/favicon.ico" : View.favicon
         }
 
 
