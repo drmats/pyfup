@@ -11,13 +11,57 @@ reviewed for security issues, however it's handy for ad-hoc
 file transfers between machines over HTTP protocol.
 """
 
-from __future__ import print_function
-import sys, os, signal, cgi, argparse, textwrap
+from __future__ import print_function, absolute_import
+import sys, os, signal
+import textwrap, argparse, cgi, gzip
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 __license__ = "BSD 2-Clause license"
+
+
+
+
+# ...
+class GzipGlue:
+
+    """Gzip glue layer for compress/decompress functions."""
+
+    # emulates gzip.compress from python >=3.2
+    @staticmethod
+    def _compress_p2 (s):
+        osio = StringIO()
+        try:
+            with gzip.GzipFile(fileobj=osio, mode="wb") as g:
+                g.write(s)
+            return osio.getvalue()
+        finally:
+            osio.close()
+
+
+    # emulates gzip.decompress from python >=3.2
+    @staticmethod
+    def _decompress_p2 (s):
+        isio = StringIO(s)
+        try:
+            with gzip.GzipFile(fileobj=isio, mode="rb") as g:
+                return g.read()
+        finally:
+            isio.close()
+
+
+# based on simple "feature detection" assign compress/decompress methods
+if hasattr(gzip, "compress") and hasattr(gzip, "decompress"):
+    GzipGlue.compress = staticmethod(gzip.compress)
+    GzipGlue.decompress = staticmethod(gzip.decompress)
+else:
+    try:
+        from StringIO import StringIO
+    except ImportError:
+        from io import StringIO
+    GzipGlue.compress = staticmethod(GzipGlue._compress_p2)
+    GzipGlue.decompress = staticmethod(GzipGlue._decompress_p2)
 
 
 
@@ -72,9 +116,9 @@ class View:
     @staticmethod
     def index (env):
         return (
-            "200 OK",
-            [("Content-Type", "text/html; charset=utf-8")],
-            Markup.simple_upload
+            "200 OK", [
+                ("Content-Type", "text/html; charset=utf-8")
+            ], Markup.simple_upload.encode("utf-8")
         )
 
 
@@ -91,10 +135,7 @@ class View:
             fp=env["wsgi.input"], environ=env
         )
 
-        try:
-            form_file = form["file"]
-        except KeyError:
-            form_file = None
+        form_file = form["file"] if "file" in form else None
 
         if form_file != None and form_file.filename:
             fn = os.path.basename(form_file.filename)
@@ -111,10 +152,12 @@ class View:
             bytes_read = 0
 
         return (
-            "200 OK",
-            [("Content-Type", "text/plain; charset=utf-8")],
-            "Done!\n\n%s\n\nStatus:\nbytes read: %u"
-                % (message, bytes_read)
+            "200 OK", [
+                ("Content-Type", "text/plain; charset=utf-8")
+            ], (
+                "Done!\n\n%s\n\nStatus:\nbytes read: %u"
+                    % (message, bytes_read)
+            ).encode("utf-8")
         )
 
 
@@ -126,9 +169,9 @@ class View:
         ]
         resp = "\n".join(resp)
         return (
-            "200 OK",
-            [("Content-Type", "text/plain; charset=utf-8")],
-            resp
+            "200 OK", [
+                ("Content-Type", "text/plain; charset=utf-8")
+            ], resp.encode("utf-8")
         )
 
 
@@ -148,26 +191,35 @@ class Application:
         }
 
 
-    # basic action dispatcher (url-based)
+    # basic, url-based action dispatcher
     def dispatch (self, env):
-        try:
+        if env["PATH_INFO"] in self.urls:
             return self.urls[env["PATH_INFO"]](env)
-        except KeyError:
+        else:
             return (
-                "404 Not Found",
-                [("Content-Type", "text/plain; charset=utf-8")],
-                "No action for \"%s\" route defined."
-                    % env["PATH_INFO"]
+                "404 Not Found", [
+                    ("Content-Type", "text/plain; charset=utf-8")
+                ], (
+                    "No action for \"%s\" route defined."
+                        % env["PATH_INFO"]
+                ).encode("utf-8")
             )
 
 
     # a callable defined for a WSGI entry point
     def __call__ (self, env, start_response):
         status, headers, body = self.dispatch(env)
-        body = body.encode("utf-8")
         headers.append(
             ("Content-Length", str(sys.getsizeof(body)))
         )
+        if (
+            "HTTP_ACCEPT_ENCODING" in env and
+            env["HTTP_ACCEPT_ENCODING"].find("gzip") > -1
+        ):
+            body = GzipGlue.compress(body)
+            headers.append(
+                ("Content-Encoding", "gzip")
+            )
         start_response(status, headers)
         return [body]
 
@@ -182,7 +234,10 @@ class Main:
     # ...
     def __init__ (self):
         args = self.parse_args()
-        signal.signal(signal.SIGINT, Main.exit_handler)
+        signal.signal(
+            signal.SIGINT,
+            Main.exit_handler
+        )
         print("Hi there! (*:%u)" % args.port)
         make_server(
             "", args.port,
