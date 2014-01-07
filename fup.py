@@ -18,7 +18,7 @@ import base64, gzip
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 __license__ = "BSD 2-Clause license"
 
 
@@ -240,9 +240,6 @@ class Application:
     # a callable defined for a WSGI entry point
     def __call__ (self, env, start_response):
         status, headers, body = self.dispatch(env)
-        headers.append(
-            ("Content-Length", str(len(body)))
-        )
         if (
             "HTTP_ACCEPT_ENCODING" in env and
             env["HTTP_ACCEPT_ENCODING"].find("gzip") > -1
@@ -251,6 +248,9 @@ class Application:
             headers.append(
                 ("Content-Encoding", "gzip")
             )
+        headers.append(
+            ("Content-Length", str(len(body)))
+        )
         start_response(status, headers)
         return [body]
 
