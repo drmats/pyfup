@@ -16,7 +16,7 @@ import sys, os, signal, argparse, cgi, base64, gzip
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.2.6"
+__version__ = "0.2.7"
 __license__ = "BSD 2-Clause license"
 
 
@@ -237,16 +237,18 @@ class View:
             with open(fn, "wb", buffering=0) as out:
                 for chunk in megbuffer(form_file.file):
                     out.write(chunk)
+                status = "201 Created"
                 message = \
                     "The file \"" + fn + "\" " + \
                     "was uploaded successfully!"
                 bytes_read = out.tell()
         else:
+            status = "200 OK"
             message = "No file was uploaded."
             bytes_read = 0
 
         return (
-            "200 OK", [
+            status, [
                 ("Content-Type", "text/html; charset=utf-8")
             ], Markup.html(body=dedent("""\
                 <p>Done!</p>
