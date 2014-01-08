@@ -18,6 +18,17 @@ file transfers between machines over
 [HTTP protocol](http://www.ietf.org/rfc/rfc2616.txt).
 
 
+
+
+## installation
+
+No installation is necessary. Just
+[download](https://raw.github.com/drmats/pyfup/master/fup.py)
+the latest version.
+
+
+
+
 ## usage
 
     python fup.py [-h] [-v] [port]
@@ -33,7 +44,9 @@ or
 
 ## license
 
-BSD 2-Clause
+**pyfup** is released under the BSD 2-Clause license. See the
+[LICENSE](https://github.com/drmats/pyfup/blob/master/LICENSE)
+for more details.
 
 
 
