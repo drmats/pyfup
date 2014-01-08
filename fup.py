@@ -107,7 +107,9 @@ class Markup:
             font-family: monospace;
             padding: 16px;
             line-height: 28px;
+            background-color: #CCCCCC;
         }
+        input.fselect { width: 100%; }
         h2 {
             font-size: 20px;
             font-weight: bold;
@@ -122,7 +124,7 @@ class Markup:
             background-repeat: none;
             background-position: center center;
         }
-        a, a:visited { text-decoration: none; color: blue; }
+        a, a:visited { text-decoration: none; color: #0077CC; }
         a:hover { text-decoration: underline; }
         p { margin: 0px; padding: 0px; }\
     """)
@@ -186,7 +188,7 @@ class View:
                     method="post"
                     enctype="multipart/form-data"
                 >
-                    <input type="file" name="file"><br>
+                    <input type="file" name="file" class="fselect"><br>
                     <input type="submit" value="Upload File">
                 </form>
             """)).encode("utf-8")
