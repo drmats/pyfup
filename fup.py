@@ -71,7 +71,10 @@ try:
     from textwrap import indent
 except ImportError:
     def indent (s, i):
-        return s
+        return "\n".join(map(
+            lambda l: i+l if l!="" else l,
+            s.split("\n")
+        ))
 
 
 
@@ -229,14 +232,13 @@ class View:
 
         if form_file != None and form_file.filename:
             fn = os.path.basename(form_file.filename)
-            out = open(fn, "wb", buffering=0)
-            for chunk in megbuffer(form_file.file):
-                out.write(chunk)
-            message = \
-                "The file \"" + fn + "\" " + \
-                "was uploaded successfully!"
-            bytes_read = out.tell()
-            out.close()
+            with open(fn, "wb", buffering=0) as out:
+                for chunk in megbuffer(form_file.file):
+                    out.write(chunk)
+                message = \
+                    "The file \"" + fn + "\" " + \
+                    "was uploaded successfully!"
+                bytes_read = out.tell()
         else:
             message = "No file was uploaded."
             bytes_read = 0
@@ -353,4 +355,3 @@ class Main:
 # ...
 if __name__ == "__main__":
     Main()
-
