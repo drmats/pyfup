@@ -14,7 +14,8 @@ form content type.
 
 Don't use it in production environment as it has not been
 reviewed for security issues, however it's handy for ad-hoc
-file transfers between machines over HTTP protocol.
+file transfers between machines over
+[HTTP protocol](http://www.ietf.org/rfc/rfc2616.txt).
 
 
 ## usage
