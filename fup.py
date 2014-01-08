@@ -18,7 +18,7 @@ import base64, gzip
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 __license__ = "BSD 2-Clause license"
 
 
@@ -27,7 +27,7 @@ __license__ = "BSD 2-Clause license"
 # ...
 class GzipGlue:
 
-    """Gzip glue layer for compress/decompress functions."""
+    """Gzip glue compat. layer for compress/decompress functions."""
 
     # emulates gzip.compress from python >=3.2
     @staticmethod
@@ -70,40 +70,49 @@ else:
 # ...
 class Markup:
 
-    """"Static" text markup definitions."""
+    """Markup definitions."""
 
-    # simple html upload form
-    simple_upload = textwrap.dedent("""\
-        <!DOCTYPE html>
-        <html dir="ltr" lang="en-US">
-        <head>
-            <meta charset="utf-8">
-            <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-            <meta http-equiv="content-style-type" content="text/css">
-            <link rel="icon" type="image/x-icon" href="favicon.ico">
-            <title>File Upload</title>
-            <style media="screen">
-                html {
-                    font-size: 14px;
-                    font-family: monospace;
-                    padding: 10px;
-                    line-height: 28px;
-                }
-            </style>
-        </head>
-        <body>
-            Upload a file:
-            <form
-                action="upload/"
-                method="post"
-                enctype="multipart/form-data"
-            >
-                <input type="file" name="file"><br>
-                <input type="submit" value="Upload File">
-            </form>
-            (<a href="info/">env. info</a>)
-        </body>
-        </html>\
+    # default indent
+    indent = " "*4
+
+
+    # common html head
+    common_head = textwrap.dedent("""\
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+        <meta http-equiv="content-style-type" content="text/css">
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+        <title>pyfup</title>
+        <link rel="stylesheet" type="text/css" href="m.css" media="screen">
+    """)
+
+
+    # ...
+    css = textwrap.dedent("""\
+        @charset "utf-8";
+        html {
+            font-size: 14px;
+            font-family: monospace;
+            padding: 16px;
+            line-height: 28px;
+        }
+        h2 {
+            font-size: 20px;
+            font-weight: bold;
+            line-height: 20px;
+            margin-bottom: 16px;
+        }
+        .logo {
+            display: inline-block;
+            width: 16px; height: 16px;
+            margin: 2px 6px 2px 6px;
+            background-image: url(favicon.ico);
+            background-repeat: none;
+            background-position: center center;
+        }
+        a, a:visited { text-decoration: none; color: blue; }
+        a:hover { text-decoration: underline; }
+        p { margin: 0px; padding: 0px; }\
     """)
 
 
@@ -123,6 +132,29 @@ class Markup:
     """)
 
 
+    # ...
+    @staticmethod
+    def html (head=common_head, body=""):
+        return (
+            textwrap.dedent("""\
+                <!DOCTYPE html>
+                <html dir="ltr" lang="en-US">
+                    <head>
+            """) + \
+            textwrap.indent(head, Markup.indent*2) + \
+            textwrap.indent(textwrap.dedent("""\
+                    </head>
+                    <body>
+                        <h2><div class="logo">&nbsp;</div>pyfup</h2>
+            """), Markup.indent) + \
+            textwrap.indent(body, Markup.indent*2) + \
+            textwrap.dedent("""\
+                    </body>
+                </html>\
+            """)
+        )
+
+
 
 
 # ...
@@ -136,7 +168,38 @@ class View:
         return (
             "200 OK", [
                 ("Content-Type", "text/html; charset=utf-8")
-            ], Markup.simple_upload.encode("utf-8")
+            ], Markup.html(body=textwrap.dedent("""\
+                <form
+                    action="upload"
+                    method="post"
+                    enctype="multipart/form-data"
+                >
+                    <input type="file" name="file"><br>
+                    <input type="submit" value="Upload File">
+                </form>
+            """)).encode("utf-8")
+        )
+
+
+    # ...
+    @staticmethod
+    def favicon (env):
+        return (
+            "200 OK", [
+                ("Content-Type", "image/x-icon")
+            ], GzipGlue.decompress(base64.b64decode(
+                Markup.favicon.encode("utf-8")
+            ))
+        )
+
+
+    # ...
+    @staticmethod
+    def css (env):
+        return (
+            "200 OK", [
+                ("Content-Type", "text/css")
+            ], Markup.css.encode("utf-8")
         )
 
 
@@ -171,37 +234,13 @@ class View:
 
         return (
             "200 OK", [
-                ("Content-Type", "text/plain; charset=utf-8")
-            ], (
-                "Done!\n\n%s\n\nStatus:\nbytes read: %u"
-                    % (message, bytes_read)
-            ).encode("utf-8")
-        )
-
-
-    # show current environment (key-val mapping)
-    @staticmethod
-    def info (env):
-        resp = ["%s: %s" % (key, value)
-            for key, value in sorted(env.items())
-        ]
-        resp = "\n".join(resp)
-        return (
-            "200 OK", [
-                ("Content-Type", "text/plain; charset=utf-8")
-            ], resp.encode("utf-8")
-        )
-
-
-    # ...
-    @staticmethod
-    def favicon (env):
-        return (
-            "200 OK", [
-                ("Content-Type", "image/x-icon")
-            ], GzipGlue.decompress(base64.b64decode(
-                Markup.favicon.encode("utf-8")
-            ))
+                ("Content-Type", "text/html; charset=utf-8")
+            ], Markup.html(body=textwrap.dedent("""\
+                <p>Done!</p>
+                <p>%s</p>
+                <p>bytes uploaded: %u</p>
+                <p>(<a href="..">upload another file</a>)</p>
+            """ % (message, bytes_read))).encode("utf-8")
         )
 
 
@@ -216,9 +255,9 @@ class Application:
     def __init__ (self):
         self.urls = {
             "/" : View.index,
-            "/upload/" : View.upload,
-            "/info/" : View.info,
-            "/favicon.ico" : View.favicon
+            "/favicon.ico" : View.favicon,
+            "/m.css" : View.css,            
+            "/upload" : View.upload
         }
 
 
