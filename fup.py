@@ -12,13 +12,11 @@ file transfers between machines over HTTP protocol.
 """
 
 from __future__ import print_function, absolute_import
-import sys, os, signal
-import textwrap, argparse, cgi
-import base64, gzip
+import sys, os, signal, argparse, cgi, base64, gzip
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.2.5"
+__version__ = "0.2.6"
 __license__ = "BSD 2-Clause license"
 
 
@@ -67,6 +65,17 @@ else:
 
 
 
+# python 2.x lacks textwrap.indent function
+from textwrap import dedent
+try:
+    from textwrap import indent
+except ImportError:
+    def indent (s, i):
+        return s
+
+
+
+
 # ...
 class Markup:
 
@@ -77,7 +86,7 @@ class Markup:
 
 
     # common html head
-    common_head = textwrap.dedent("""\
+    common_head = dedent("""\
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
         <meta http-equiv="content-style-type" content="text/css">
@@ -88,7 +97,7 @@ class Markup:
 
 
     # ...
-    css = textwrap.dedent("""\
+    css = dedent("""\
         @charset "utf-8";
         html {
             font-size: 14px;
@@ -117,7 +126,7 @@ class Markup:
 
 
     # ...
-    favicon = textwrap.dedent("""\
+    favicon = dedent("""\
         H4sIAIRbzFIC/41UPWsiYRCe1bBGRAg5OAJXRNLERgvLC3KNlhZ+4AciWohEsBA\
         VrJSrbHIHd7/B+hovpeARKzurNDb3F7xgdFWYzLPJbjZx5RwZeZl35nHeZ56RSJ\
         HPyQnJt4+uj4g+EpFfXEISeY7vM2Ymt9ttnI+bzebnUqnUTaVSd4VC4RGeTqfvi\
@@ -136,19 +145,19 @@ class Markup:
     @staticmethod
     def html (head=common_head, body=""):
         return (
-            textwrap.dedent("""\
+            dedent("""\
                 <!DOCTYPE html>
                 <html dir="ltr" lang="en-US">
                     <head>
             """) + \
-            textwrap.indent(head, Markup.indent*2) + \
-            textwrap.indent(textwrap.dedent("""\
+            indent(head, Markup.indent*2) + \
+            indent(dedent("""\
                     </head>
                     <body>
                         <h2><div class="logo">&nbsp;</div>pyfup</h2>
             """), Markup.indent) + \
-            textwrap.indent(body, Markup.indent*2) + \
-            textwrap.dedent("""\
+            indent(body, Markup.indent*2) + \
+            dedent("""\
                     </body>
                 </html>\
             """)
@@ -168,7 +177,7 @@ class View:
         return (
             "200 OK", [
                 ("Content-Type", "text/html; charset=utf-8")
-            ], Markup.html(body=textwrap.dedent("""\
+            ], Markup.html(body=dedent("""\
                 <form
                     action="upload"
                     method="post"
@@ -235,7 +244,7 @@ class View:
         return (
             "200 OK", [
                 ("Content-Type", "text/html; charset=utf-8")
-            ], Markup.html(body=textwrap.dedent("""\
+            ], Markup.html(body=dedent("""\
                 <p>Done!</p>
                 <p>%s</p>
                 <p>bytes uploaded: %u</p>
@@ -344,3 +353,4 @@ class Main:
 # ...
 if __name__ == "__main__":
     Main()
+
