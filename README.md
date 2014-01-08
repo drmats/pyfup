@@ -31,23 +31,27 @@ the latest version.
 
 ## usage
 
-Stand alone:
+* stand alone:
 
     python fup.py [-h] [-v] [port]
 
-or with [gunicorn](http://gunicorn.org/):
+* with [gunicorn](http://gunicorn.org/):
     
     gunicorn -b 0.0.0.0 --access-logfile - fup:app
 
-In order to be able to accept big files and avoid "worker timeouts" it is
+* in order to be able to accept big files and avoid "worker timeouts" it is
 desirable to use [eventlet](http://eventlet.net/),
 [gevent](http://www.gevent.org/) or
 [tornado](http://www.tornadoweb.org/)
-[worker classes](http://docs.gunicorn.org/en/latest/settings.html#worker-processes)
+[worker classes](http://docs.gunicorn.org/en/latest/settings.html#worker-processes):
 
     gunicorn -b 0.0.0.0 -k eventlet --access-logfile - fup:app
     gunicorn -b 0.0.0.0 -k gevent --access-logfile - fup:app
     gunicorn -b 0.0.0.0 -k tornado fup:app
+
+* with [Twisted Web](https://twistedmatrix.com/trac/wiki/TwistedWeb):
+
+    twistd -n web --port 8000 --wsgi fup.app
 
 
 
