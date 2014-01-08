@@ -20,7 +20,7 @@ file transfers between machines over
 
 ## usage
 
-    python fup.py [PORT]
+    python fup.py [-h] [-v] [port]
 
 
 ## license
