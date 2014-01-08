@@ -22,10 +22,20 @@ file transfers between machines over
 
     python fup.py [-h] [-v] [port]
 
+or
+
+    gunicorn --access-logfile - -b 0.0.0.0 fup:app
+
+(provided that [gunicorn](http://gunicorn.org/) is available in the system)
+
+
+
 
 ## license
 
 BSD 2-Clause
+
+
 
 
 ## notes

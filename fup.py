@@ -16,7 +16,7 @@ import sys, os, signal, argparse, cgi, base64, gzip
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.2.7a"
+__version__ = "0.3.0"
 __license__ = "BSD 2-Clause license"
 
 
@@ -72,6 +72,7 @@ try:
     from textwrap import indent
 except ImportError:
     def indent (s, i):
+        """Emulates texwrap.indent from python 3.x."""
         return "\n".join(map(
             lambda l: i+l if l!="" else l,
             s.split("\n")
@@ -310,7 +311,7 @@ class Application:
             ("Content-Length", str(len(body)))
         )
         start_response(status, headers)
-        return [body]
+        return iter([body])
 
 
 
@@ -365,3 +366,5 @@ class Main:
 # ...
 if __name__ == "__main__":
     Main()
+else:
+    app = Application()
