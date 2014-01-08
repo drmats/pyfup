@@ -6,8 +6,9 @@ This script brings up a
 [simple\_server](http://docs.python.org/3.3/library/wsgiref.html#module-wsgiref.simple_server)
 from [python](http://python.org/)'s
 [wsgiref](http://docs.python.org/3.3/library/wsgiref.html) package and runs
-a **really simple** [WSGI](http://www.python.org/dev/peps/pep-3333/)
-application on it. It allows to upload any file using
+a **really simple** [WSGI](http://wsgi.org)
+([PEP 3333](http://www.python.org/dev/peps/pep-3333/)) application on it.
+It allows to upload any file using
 [multipart/form-data](http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.2)
 form content type.
 
