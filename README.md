@@ -53,6 +53,11 @@ desirable to use [eventlet](http://eventlet.net/),
 
         twistd -n web --port 8000 --wsgi fup.app
 
+* with [uWSGI](http://uwsgi-docs.readthedocs.org/en/latest/):
+
+        uwsgi --plugin python --http :8000 --wsgi-file fup.py --callable app
+        uwsgi --plugin python3 --http :8000 --wsgi-file fup.py --callable app
+
 
 
 
