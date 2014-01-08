@@ -16,20 +16,21 @@ import sys, os, signal, argparse, cgi, base64, gzip
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.2.7"
+__version__ = "0.2.7a"
 __license__ = "BSD 2-Clause license"
 
 
 
 
-# ...
+# Python 3.2.x equivalent of gzip.compress and gzip.decompress
+# for python 2.x.
 class GzipGlue:
 
     """Gzip glue compat. layer for compress/decompress functions."""
 
-    # emulates gzip.compress from python >=3.2
     @staticmethod
     def _compress_p2 (s):
+        """Emulates gzip.compress from python >=3.2."""
         osio = StringIO()
         try:
             with gzip.GzipFile(fileobj=osio, mode="wb") as g:
@@ -39,9 +40,9 @@ class GzipGlue:
             osio.close()
 
 
-    # emulates gzip.decompress from python >=3.2
     @staticmethod
     def _decompress_p2 (s):
+        """Emulates gzip.decompress from python >=3.2."""
         isio = StringIO(s)
         try:
             with gzip.GzipFile(fileobj=isio, mode="rb") as g:
@@ -79,13 +80,13 @@ except ImportError:
 
 
 
-# ...
-class Markup:
+# Static templates and assets.
+class Template:
 
     """Markup definitions."""
 
     # default indent
-    indent = " "*4
+    indent = " " * 4
 
 
     # common html head
@@ -99,7 +100,7 @@ class Markup:
     """)
 
 
-    # ...
+    # default css
     css = dedent("""\
         @charset "utf-8";
         html {
@@ -130,7 +131,7 @@ class Markup:
     )
 
 
-    # ...
+    # gzipped and base64-encoded *.ico file
     favicon = dedent("""\
         H4sIAIRbzFIC/41UPWsiYRCe1bBGRAg5OAJXRNLERgvLC3KNlhZ+4AciWohEsBA\
         VrJSrbHIHd7/B+hovpeARKzurNDb3F7xgdFWYzLPJbjZx5RwZeZl35nHeZ56RSJ\
@@ -146,22 +147,22 @@ class Markup:
     )
 
 
-    # ...
     @staticmethod
     def html (head=common_head, body=""):
+        """Simple full-page HTML generator."""
         return (
             dedent("""\
                 <!DOCTYPE html>
                 <html dir="ltr" lang="en-US">
                     <head>
             """) + \
-            indent(head, Markup.indent*2) + \
+            indent(head, Template.indent*2) + \
             indent(dedent("""\
                     </head>
                     <body>
                         <h2><div class="logo">&nbsp;</div>pyfup</h2>
-            """), Markup.indent) + \
-            indent(body, Markup.indent*2) + \
+            """), Template.indent) + \
+            indent(body, Template.indent*2) + \
             dedent("""\
                     </body>
                 </html>"""
@@ -171,18 +172,18 @@ class Markup:
 
 
 
-# ...
+# Define views with logic for all required functionality.
 class View:
 
     """Views/actions for each URL defined in the application."""
 
-    # file upload page with an appropriate html form
     @staticmethod
     def index (env):
+        """File upload page with an appropriate html form."""
         return (
             "200 OK", [
                 ("Content-Type", "text/html; charset=utf-8")
-            ], Markup.html(body=dedent("""\
+            ], Template.html(body=dedent("""\
                 <form
                     action="upload"
                     method="post"
@@ -195,31 +196,31 @@ class View:
         )
 
 
-    # ...
     @staticmethod
     def favicon (env):
+        """Returns decompressed bytes with ico file."""
         return (
             "200 OK", [
                 ("Content-Type", "image/x-icon")
             ], GzipGlue.decompress(base64.b64decode(
-                Markup.favicon.encode("utf-8")
+                Template.favicon.encode("utf-8")
             ))
         )
 
 
-    # ...
     @staticmethod
     def css (env):
+        """Returns CSS text."""
         return (
             "200 OK", [
                 ("Content-Type", "text/css")
-            ], Markup.css.encode("utf-8")
+            ], Template.css.encode("utf-8")
         )
 
 
-    # file upload action (called from an upload form)
     @staticmethod
     def upload (env):
+        """File upload action (called from an upload form)."""
         def megbuffer (f):
            while True:
               chunk = f.read(1024**2)
@@ -250,7 +251,7 @@ class View:
         return (
             status, [
                 ("Content-Type", "text/html; charset=utf-8")
-            ], Markup.html(body=dedent("""\
+            ], Template.html(body=dedent("""\
                 <p>Done!</p>
                 <p>%s</p>
                 <p>bytes uploaded: %u</p>
@@ -261,13 +262,16 @@ class View:
 
 
 
-# ...
+# Create url -> view mapping,
+# dispatch requests to appropriate views,
+# optionally compress response
+# and compute Content-Length.
 class Application:
 
     """Base class for a web application."""
 
-    # "url routing" setup
     def __init__ (self):
+        """"url routing" setup"""
         self.urls = {
             "/" : View.index,
             "/favicon.ico" : View.favicon,
@@ -276,8 +280,8 @@ class Application:
         }
 
 
-    # basic, url-based action dispatcher
     def dispatch (self, env):
+        """Basic, url-based action dispatcher."""
         if env["PATH_INFO"] in self.urls:
             return self.urls[env["PATH_INFO"]](env)
         else:
@@ -291,8 +295,8 @@ class Application:
             )
 
 
-    # a callable defined for a WSGI entry point
     def __call__ (self, env, start_response):
+        """A callable defined for a WSGI entry point."""
         status, headers, body = self.dispatch(env)
         if (
             "HTTP_ACCEPT_ENCODING" in env and
@@ -311,13 +315,15 @@ class Application:
 
 
 
-# ...
+# Parse command-line arguments,
+# instantiate Application object
+# and run WSGI server.
 class Main:
 
     """Main program class."""
 
-    # ...
     def __init__ (self):
+        """Program entry point."""
         args = self.parse_args()
         signal.signal(
             signal.SIGINT,
@@ -330,8 +336,8 @@ class Main:
         ).serve_forever()
 
 
-    # command-line argument parser
     def parse_args (self):
+        """Command-line argument parser."""
         argparser = argparse.ArgumentParser(
             description="Basic file upload WSGI application.",
             epilog="More at: https://github.com/drmats/pyfup"
@@ -347,9 +353,9 @@ class Main:
         return argparser.parse_args()
 
 
-    # SIGINT/KeyboardInterrupt handler
     @staticmethod
     def exit_handler (sig_num, stack_frame):
+        """SIGINT/KeyboardInterrupt handler."""
         print("\nBye!")
         sys.exit()
 
