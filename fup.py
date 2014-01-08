@@ -126,8 +126,8 @@ class Markup:
         }
         a, a:visited { text-decoration: none; color: #0077CC; }
         a:hover { text-decoration: underline; }
-        p { margin: 0px; padding: 0px; }\
-    """)
+        p { margin: 0px; padding: 0px; }"""
+    )
 
 
     # ...
@@ -142,8 +142,8 @@ class Markup:
         fMWiwV3Oh2uVCr6GSYzetMT6uPx+L3dO2Hr9Zo1TdPPwvcOL9BYt9v9vo8r2Gaz\
         0fmwcg/HG6DT6XR66ff7bfkWfG40GrZ30Cm0nsvlHMLVDfg/VD/QKbSOfYEGx+P\
         xB5nFr0MwoFNoHfti3R9goI99b3npmaF17AtqsLfz+dzEwFvABzjFXDBb6AMag0\
-        6hdeyLdfe3X4j+uoj+OIm+Ks9Ois0fhfJ6j1zUrM6JngCTkE5/fgQAAA==\
-    """)
+        6hdeyLdfe3X4j+uoj+OIm+Ks9Ois0fhfJ6j1zUrM6JngCTkE5/fgQAAA=="""
+    )
 
 
     # ...
@@ -164,8 +164,8 @@ class Markup:
             indent(body, Markup.indent*2) + \
             dedent("""\
                     </body>
-                </html>\
-            """)
+                </html>"""
+            )
         )
 
 
