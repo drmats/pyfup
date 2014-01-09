@@ -27,7 +27,7 @@ __license__ = "BSD 2-Clause license"
 
 # Python 3.2.x equivalent of gzip.compress and gzip.decompress
 # for python 2.x.
-class GzipGlue:
+class GzipGlue(object):
 
     """Gzip glue compat. layer for compress/decompress functions."""
 
@@ -85,7 +85,7 @@ except ImportError:
 
 
 # Static templates and assets.
-class Template:
+class Template(object):
 
     """Markup definitions."""
 
@@ -177,7 +177,7 @@ class Template:
 
 
 # Define views with logic for all required functionality.
-class View:
+class View(object):
 
     """Views/actions for each URL defined in the application."""
 
@@ -270,7 +270,7 @@ class View:
 # dispatch requests to appropriate views,
 # optionally compress response
 # and compute Content-Length.
-class Application:
+class Application(object):
 
     """Base class for a web application."""
 
@@ -322,7 +322,7 @@ class Application:
 # Parse command-line arguments,
 # instantiate Application object
 # and run WSGI server.
-class Main:
+class Main(object):
 
     """Main program class."""
 
