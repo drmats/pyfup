@@ -16,7 +16,7 @@ import sys, os, signal, argparse, cgi, base64, gzip
 from wsgiref.simple_server import make_server
 
 __author__ = "drmats"
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 __license__ = "BSD 2-Clause license"
 
 
@@ -330,9 +330,9 @@ class Main:
             signal.SIGINT,
             Main.exit_handler
         )
-        print("Hi there! (*:%u)" % args.port)
+        print("Hi there! (%s:%u)" % (args.host, args.port))
         make_server(
-            "", args.port,
+            args.host, args.port,
             Application()
         ).serve_forever()
 
@@ -343,6 +343,10 @@ class Main:
             description="Basic file upload WSGI application.",
             epilog="More at: https://github.com/drmats/pyfup"
         )
+        argparser.add_argument(
+            "--host", action="store", default="0.0.0.0", type=str,
+            help="Specify host [default: 0.0.0.0]"
+        )        
         argparser.add_argument(
             "port", action="store", default=8000, type=int,
             nargs="?", help="Specify alternate port [default: 8000]"

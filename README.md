@@ -33,30 +33,29 @@ the latest version.
 
 * stand alone:
 
-        python fup.py [-h] [-v] [port]
+        python [-h] [--host HOST] [-v] [port]
 
 * with [gunicorn](http://gunicorn.org/):
     
-        gunicorn -b 0.0.0.0 --access-logfile - fup:app
+        gunicorn [-b HOST] --access-logfile - fup:app
 
 * in order to be able to accept big files and avoid "worker timeouts" it is
-desirable to use [eventlet](http://eventlet.net/),
+desirable to use asynchronous ([eventlet](http://eventlet.net/),
 [gevent](http://www.gevent.org/) or
-[tornado](http://www.tornadoweb.org/)
+[tornado](http://www.tornadoweb.org/))
 [worker classes](http://docs.gunicorn.org/en/latest/settings.html#worker-processes):
 
-        gunicorn -b 0.0.0.0 -k eventlet --access-logfile - fup:app
-        gunicorn -b 0.0.0.0 -k gevent --access-logfile - fup:app
-        gunicorn -b 0.0.0.0 -k tornado fup:app
+        gunicorn [-b HOST] -k eventlet --access-logfile - fup:app
+        gunicorn [-b HOST] -k gevent --access-logfile - fup:app
+        gunicorn [-b HOST] -k tornado fup:app
 
 * with [Twisted Web](https://twistedmatrix.com/trac/wiki/TwistedWeb):
 
-        twistd -n web --port 8000 --wsgi fup.app
+        twistd -n web [--port PORT] --wsgi fup.app
 
 * with [uWSGI](http://uwsgi-docs.readthedocs.org/en/latest/):
 
-        uwsgi --plugin python --http :8000 --wsgi-file fup.py --callable app
-        uwsgi --plugin python3 --http :8000 --wsgi-file fup.py --callable app
+        uwsgi --plugin python --http :[PORT] --wsgi-file fup.py --callable app
 
 
 
