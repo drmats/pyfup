@@ -14,12 +14,13 @@ https://github.com/drmats/pyfup
 """
 
 from __future__ import print_function, absolute_import
-import sys, os, signal, argparse, cgi, base64, gzip
+import sys, os, signal, argparse, base64, gzip
+from cgi import FieldStorage
 from wsgiref.simple_server import make_server, software_version
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 __license__ = "BSD 2-Clause license"
 
 
@@ -176,6 +177,23 @@ class Template(object):
 
 
 
+# ...
+class FUPFieldStorage(FieldStorage):
+
+    """multipart/form-data request body parser"""
+
+    def make_file (self, binary=None):
+        """create secure tempfile in current directory"""
+        self.secure_filename = os.path.basename(self.filename)
+        self.temp_filename = self.secure_filename + ".part"
+        while os.path.exists(self.temp_filename):
+            self.secure_filename += ".dup"
+            self.temp_filename = self.secure_filename + ".part"
+        return open(self.temp_filename, "wb+", buffering=1<<16)
+
+
+
+
 # Define views with logic for all required functionality.
 class View(object):
 
@@ -225,28 +243,23 @@ class View(object):
     @staticmethod
     def upload (env):
         """File upload action (called from an upload form)."""
-        def megbuffer (f):
-           while True:
-              chunk = f.read(1024**2)
-              if not chunk: break
-              yield chunk
-
-        form = cgi.FieldStorage(
-            fp=env["wsgi.input"], environ=env
-        )
-
+        form = FUPFieldStorage(fp=env["wsgi.input"], environ=env)
         form_file = form["file"] if "file" in form else None
 
         if form_file != None and form_file.filename:
-            fn = os.path.basename(form_file.filename)
-            with open(fn, "wb", buffering=0) as out:
-                for chunk in megbuffer(form_file.file):
-                    out.write(chunk)
-                status = "201 Created"
-                message = \
-                    "The file \"" + fn + "\" " + \
-                    "was uploaded successfully!"
-                bytes_read = out.tell()
+            form_file.file.close()
+
+            fn = form_file.secure_filename
+            while os.path.exists(fn):
+                fn += ".dup"
+            os.rename(form_file.temp_filename, fn)
+
+            status = "201 Created"
+            message = \
+                "The file \"" + form_file.filename + "\" " + \
+                "was uploaded successfully!"
+            bytes_read = os.stat(fn).st_size
+                    
         else:
             status = "200 OK"
             message = "No file was uploaded."
