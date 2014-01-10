@@ -15,7 +15,7 @@ https://github.com/drmats/pyfup
 
 from __future__ import print_function, absolute_import
 import sys, os, signal, argparse, cgi, base64, gzip
-from wsgiref.simple_server import make_server
+from wsgiref.simple_server import make_server, software_version
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
@@ -333,10 +333,12 @@ class Main(object):
             signal.SIGINT,
             Main.exit_handler
         )
-        print("Hi there! (%s:%u)" % (args.host, args.port))
+        print(
+            "[%s] -- Hi there! -- [%s:%u]"
+                % (software_version, args.host, args.port)
+        )
         make_server(
-            args.host, args.port,
-            Application()
+            args.host, args.port, Application()
         ).serve_forever()
 
 
