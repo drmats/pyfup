@@ -33,7 +33,7 @@ the latest version.
 
 * stand alone:
 
-        python [-h] [--host HOST] [-v] [port]
+        python fup.py [-h] [--host HOST] [-v] [port]
 
 * with [gunicorn](http://gunicorn.org/):
     
