@@ -130,6 +130,7 @@ class Template(object):
             background-repeat: none;
             background-position: center center;
         }
+        fieldset { border: none; }
         a, a:visited { text-decoration: none; color: #0077CC; }
         a:hover { text-decoration: underline; }
         p { margin: 0px; padding: 0px; }"""
@@ -212,8 +213,10 @@ class View(object):
                     method="post"
                     enctype="multipart/form-data"
                 >
-                    <input type="file" name="file" class="fselect"><br>
-                    <input type="submit" value="Upload File">
+                    <fieldset>
+                        <input type="file" name="file" class="fselect">
+                        <input type="submit" value="Upload File">
+                    </fieldset>
                 </form>
             """)).encode("utf-8")
         )

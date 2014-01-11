@@ -31,7 +31,7 @@ the latest version.
 
 ## usage
 
-* stand alone:
+* standalone:
 
         python fup.py [-h] [--host HOST] [-v] [port]
 
