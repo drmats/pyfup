@@ -1,6 +1,6 @@
 # pyfup
 
-Basic file upload WSGI application (python 2.x/3.x)
+Basic file upload WSGI application (python >=2.6.x/>=3.x)
 
 This script brings up a
 [simple\_server](http://docs.python.org/3.3/library/wsgiref.html#module-wsgiref.simple_server)
@@ -72,4 +72,5 @@ for more details.
 ## notes
 
 The script was tested and is known to work with python versions 2.7.2, 2.7.3,
-2.7.5, 3.3.0, 3.3.2 and 3.3.3 on linux and windows.
+2.7.5, 3.3.0, 3.3.2 and 3.3.3 on linux and windows, but should also work on
+python version >=2.6.x.

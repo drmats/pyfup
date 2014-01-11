@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Basic file upload WSGI application (python 2.x/3.x).
+"""Basic file upload WSGI application (python >=2.6.x/>=3.x).
 
 This script brings up a simple_server from python's wsgiref
 package and runs a really simple web application on it.
@@ -177,7 +177,8 @@ class Template(object):
 
 
 
-# ...
+# FieldStorage class subclassed for override the default choice
+# of storing all files in a temporary directory.
 class FUPFieldStorage(FieldStorage):
 
     """multipart/form-data request body parser"""
@@ -343,16 +344,15 @@ class Main(object):
         """Program entry point."""
         args = self.parse_args()
         signal.signal(
-            signal.SIGINT,
-            Main.exit_handler
+            signal.SIGINT, self.exit_handler
         )
-        print(
-            "[%s] -- Hi there! -- [%s:%u]"
-                % (software_version, args.host, args.port)
+        print("[%s] -- exit: ctrl+C" % software_version)
+        self.server_process = Process(
+            target=self.run_server,
+            args=(args.host, args.port)
         )
-        make_server(
-            args.host, args.port, Application()
-        ).serve_forever()
+        self.server_process.start()
+        self.main_loop()
 
 
     def parse_args (self):
@@ -376,17 +376,32 @@ class Main(object):
         return argparser.parse_args()
 
 
-    @staticmethod
-    def exit_handler (sig_num, stack_frame):
+    def exit_handler (self, sig_num, stack_frame):
         """SIGINT/KeyboardInterrupt handler."""
+        self.server_process.terminate()
         print("\nBye!")
         sys.exit()
+
+
+    def run_server (self, host, port):
+        """WSGIServer main loop."""
+        print("listening on %s:%u" % (host, port))
+        make_server(
+            host, port, Application()
+        ).serve_forever()
+
+
+    def main_loop (self):
+        """Main process loop (just to keep it alive)."""
+        while True:
+            input()
 
 
 
 
 # ...
 if __name__ == "__main__":
+    from multiprocessing import Process
     Main()
-else:
+elif __name__ != "__parents_main__":
     app = Application()
