@@ -78,7 +78,7 @@ except ImportError:
     def indent (s, i):
         """Emulates texwrap.indent from python 3.x."""
         return "\n".join(map(
-            lambda l: i+l if l!="" else l,
+            lambda l:  i + l  if  l != ""  else  l,
             s.split("\n")
         ))
 
@@ -138,7 +138,7 @@ class Template(object):
 
 
     # gzipped and base64-encoded *.ico file
-    favicon = dedent("""\
+    favicon = GzipGlue.decompress(base64.b64decode(dedent("""\
         H4sIAIRbzFIC/41UPWsiYRCe1bBGRAg5OAJXRNLERgvLC3KNlhZ+4AciWohEsBA\
         VrJSrbHIHd7/B+hovpeARKzurNDb3F7xgdFWYzLPJbjZx5RwZeZl35nHeZ56RSJ\
         HPyQnJt4+uj4g+EpFfXEISeY7vM2Ymt9ttnI+bzebnUqnUTaVSd4VC4RGeTqfvi\
@@ -150,7 +150,7 @@ class Template(object):
         0fmwcg/HG6DT6XR66ff7bfkWfG40GrZ30Cm0nsvlHMLVDfg/VD/QKbSOfYEGx+P\
         xB5nFr0MwoFNoHfti3R9goI99b3npmaF17AtqsLfz+dzEwFvABzjFXDBb6AMag0\
         6hdeyLdfe3X4j+uoj+OIm+Ks9Ois0fhfJ6j1zUrM6JngCTkE5/fgQAAA=="""
-    )
+    ).encode("utf-8")))
 
 
     @staticmethod
@@ -223,25 +223,21 @@ class View(object):
 
 
     @staticmethod
-    def favicon (env):
-        """Returns decompressed bytes with ico file."""
-        return (
-            "200 OK", [
-                ("Content-Type", "image/x-icon")
-            ], GzipGlue.decompress(base64.b64decode(
-                Template.favicon.encode("utf-8")
-            ))
-        )
-
-
-    @staticmethod
-    def css (env):
-        """Returns CSS text."""
-        return (
-            "200 OK", [
-                ("Content-Type", "text/css")
-            ], Template.css.encode("utf-8")
-        )
+    def template (name, content_type, binary=False):
+        """Returns static template text."""
+        if binary:
+            def enc (s):
+                return s
+        else:
+            def enc (s):
+                return s.encode("utf-8")
+        def t (env):
+            return (
+                "200 OK", [
+                    ("Content-Type", content_type)
+                ], enc(getattr(Template, name))
+            )
+        return t
 
 
     @staticmethod
@@ -295,8 +291,8 @@ class Application(object):
         """"url routing" setup"""
         self.urls = {
             "/" : View.index,
-            "/favicon.ico" : View.favicon,
-            "/m.css" : View.css,            
+            "/favicon.ico" : View.template("favicon", "image/x-icon", True),
+            "/m.css" : View.template("css", "text/css"),
             "/upload" : View.upload
         }
 

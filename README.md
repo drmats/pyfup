@@ -12,6 +12,9 @@ It allows to upload any file using
 [multipart/form-data](http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.2)
 form content type.
 
+**pyfup** doesn't depend on any external library - just vanilla python
+environment is required.
+
 Don't use it in production environment as it has not been
 reviewed for security issues, however it's handy for ad-hoc
 file transfers between machines over
