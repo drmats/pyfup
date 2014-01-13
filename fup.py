@@ -20,7 +20,7 @@ from wsgiref.simple_server import make_server, software_version
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 __license__ = "BSD 2-Clause license"
 
 
@@ -85,6 +85,30 @@ except ImportError:
 
 
 
+# python 2/3 unicode issues:
+# Using "from __future__ import unicode_literals" statement in python 2.x
+# is causing that all string literals are actually of type <type "unicode">
+# and they should be encoded in all places which require type <type "str">
+# (e.g. "start_response" callback). But in python 3.x that approach
+# will result in type <class "bytes"> therefore TypeError is thrown.
+# Unfortunately u"" syntax is forbidden in python <3.3.x.
+# So it's better to leave string literals at their default type behaviour
+# in python 2.x/3.x but just handle the encoding. Python 2 defines "unicode"
+# function for converting <type "str"> to <type "unicode"> which then behaves
+# correctly while encoding back to "utf-8". Thus two definitions of 
+# utf8_encode function below.
+if hasattr(__builtins__, "unicode"):
+    def utf8_encode (s):
+        """python 2.x utf-8 encoder"""
+        return unicode(s, "utf-8").encode("utf-8")
+else:
+    def utf8_encode (s):
+        """python 3.x utf-8 encoder"""
+        return s.encode("utf-8")
+
+
+
+
 # Static templates and assets.
 class Template(object):
 
@@ -138,7 +162,7 @@ class Template(object):
 
 
     # gzipped and base64-encoded *.ico file
-    favicon = GzipGlue.decompress(base64.b64decode(dedent("""\
+    favicon = GzipGlue.decompress(base64.b64decode(utf8_encode(dedent("""\
         H4sIAIRbzFIC/41UPWsiYRCe1bBGRAg5OAJXRNLERgvLC3KNlhZ+4AciWohEsBA\
         VrJSrbHIHd7/B+hovpeARKzurNDb3F7xgdFWYzLPJbjZx5RwZeZl35nHeZ56RSJ\
         HPyQnJt4+uj4g+EpFfXEISeY7vM2Ymt9ttnI+bzebnUqnUTaVSd4VC4RGeTqfvi\
@@ -150,7 +174,7 @@ class Template(object):
         0fmwcg/HG6DT6XR66ff7bfkWfG40GrZ30Cm0nsvlHMLVDfg/VD/QKbSOfYEGx+P\
         xB5nFr0MwoFNoHfti3R9goI99b3npmaF17AtqsLfz+dzEwFvABzjFXDBb6AMag0\
         6hdeyLdfe3X4j+uoj+OIm+Ks9Ois0fhfJ6j1zUrM6JngCTkE5/fgQAAA=="""
-    ).encode("utf-8")))
+    ))))
 
 
     @staticmethod
@@ -207,7 +231,7 @@ class View(object):
         return (
             "200 OK", [
                 ("Content-Type", "text/html; charset=utf-8")
-            ], Template.html(body=dedent("""\
+            ], utf8_encode(Template.html(body=dedent("""\
                 <form
                     action="upload"
                     method="post"
@@ -218,7 +242,7 @@ class View(object):
                         <input type="submit" value="Upload File">
                     </fieldset>
                 </form>
-            """)).encode("utf-8")
+            """)))
         )
 
 
@@ -230,7 +254,7 @@ class View(object):
                 return s
         else:
             def enc (s):
-                return s.encode("utf-8")
+                return utf8_encode(s)
         def t (env):
             return (
                 "200 OK", [
@@ -256,8 +280,8 @@ class View(object):
 
             status = "201 Created"
             message = \
-                "The file \"" + form_file.filename + "\" " + \
-                "was uploaded successfully!"
+                "The file \"%s\" was uploaded successfully!" \
+                    % form_file.filename
             bytes_read = os.stat(fn).st_size
                     
         else:
@@ -268,12 +292,12 @@ class View(object):
         return (
             status, [
                 ("Content-Type", "text/html; charset=utf-8")
-            ], Template.html(body=dedent("""\
+            ], utf8_encode(Template.html(body=dedent("""\
                 <p>Done!</p>
                 <p>%s</p>
                 <p>bytes uploaded: %u</p>
                 <p>(<a href="..">upload another file</a>)</p>
-            """ % (message, bytes_read))).encode("utf-8")
+            """ % (message, bytes_read))))
         )
 
 
@@ -305,10 +329,10 @@ class Application(object):
             return (
                 "404 Not Found", [
                     ("Content-Type", "text/plain; charset=utf-8")
-                ], (
-                    "No action for \"%s\" route defined."
+                ], utf8_encode(
+                    "No action for \"%s\" route defined." \
                         % env["PATH_INFO"]
-                ).encode("utf-8")
+                )
             )
 
 
