@@ -183,6 +183,22 @@ class Template(object):
     ))))
 
 
+    # client javascript
+    client_logic = dedent("""\
+        (function (u) {
+            u.init = function () {
+                u.fs = document.getElementsByClassName('fselect')[0];
+                u.file = u.fs.files.item(0);
+                u.fs.addEventListener('change', function () {
+                    u.file = this.files.item(0);
+                }, false);
+            };
+            window.addEventListener('load', u.init, false);
+            window.u = u;
+        }({}));"""
+    )
+
+
     @staticmethod
     def html (head=common_head, body=""):
         """Simple full-page HTML generator."""
@@ -248,6 +264,11 @@ class View(object):
                         <input type="submit" value="Upload File">
                     </fieldset>
                 </form>
+                <script
+                    type="text/javascript"
+                    charset="utf-8"
+                    src="m.js">
+                </script>
             """)))
         )
 
@@ -323,6 +344,7 @@ class Application(object):
             "/" : View.index,
             "/favicon.ico" : View.template("favicon", "image/x-icon", True),
             "/m.css" : View.template("css", "text/css"),
+            "/m.js" : View.template("client_logic", "application/javascript"),
             "/upload" : View.upload
         }
 
