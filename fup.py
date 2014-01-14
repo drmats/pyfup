@@ -141,7 +141,11 @@ class Template(object):
             line-height: 28px;
             background-color: #CCCCCC;
         }
-        input.fselect { width: 100%; }
+        input.fselect {
+            display: block;
+            width: 50%; 
+            margin-bottom: 4px;
+        }
         h2 {
             font-size: 20px;
             font-weight: bold;
