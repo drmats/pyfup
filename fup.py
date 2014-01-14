@@ -185,12 +185,49 @@ class Template(object):
 
     # client javascript
     client_logic = dedent("""\
+        /*global
+            console, document, FormData, XMLHttpRequest, window
+        */
         (function (u) {
+            "use strict";
             u.init = function () {
-                u.fs = document.getElementsByClassName('fselect')[0];
+                u.fs = document.querySelector('.fselect');
+                u.submit = document.querySelector('input[type="submit"]');
                 u.file = u.fs.files.item(0);
+                u.message = document.querySelector('.message');
                 u.fs.addEventListener('change', function () {
                     u.file = this.files.item(0);
+                }, false);
+                u.submit.addEventListener('click', function (evt) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    if (u.file) {
+                        this.disabled = true;
+                        u.message.innerHTML = 'Uploading...';
+                        u.fd = new FormData();
+                        u.fd.append('file', u.file);
+                        u.xhr = new XMLHttpRequest();
+                        u.xhr.addEventListener('load', function () {
+                            u.submit.disabled = false;
+                            delete u.fd;
+                            delete u.xhr;
+                            u.message.innerHTML = 'Success!';
+                            console.log('done!');
+                        }, false);
+                        u.xhr.addEventListener('progress', function () {
+                            console.log('progress...');
+                        }, false);
+                        u.xhr.addEventListener('error', function () {
+                            console.log('error...');
+                        }, false);
+                        u.xhr.addEventListener('abort', function () {
+                            console.log('abort...');
+                        }, false);
+                        u.xhr.open('POST', 'upload', true);
+                        u.xhr.send(u.fd);
+                    } else {
+                        u.message.innerHTML = 'No file selected.';
+                    }
                 }, false);
             };
             window.addEventListener('load', u.init, false);
@@ -264,6 +301,7 @@ class View(object):
                         <input type="submit" value="Upload File">
                     </fieldset>
                 </form>
+                <div class="message"></div>
                 <script
                     type="text/javascript"
                     charset="utf-8"
