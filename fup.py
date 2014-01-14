@@ -15,12 +15,14 @@ https://github.com/drmats/pyfup
 
 from __future__ import print_function, absolute_import
 import sys, os, signal, argparse, base64, gzip
+from ntpath import basename as ntbasename
+from posixpath import basename as posixbasename
 from cgi import FieldStorage
 from wsgiref.simple_server import make_server, software_version
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 __license__ = "BSD 2-Clause license"
 
 
@@ -88,10 +90,10 @@ except ImportError:
 # python 2/3 unicode issues:
 # Using "from __future__ import unicode_literals" statement in python 2.x
 # is causing that all string literals are actually of type <type "unicode">
-# and they should be encoded in all places which require type <type "str">
-# (e.g. "start_response" callback). But in python 3.x that approach
-# will result in type <class "bytes"> therefore TypeError is thrown.
-# Unfortunately u"" syntax is forbidden in python <3.3.x.
+# therefore they should be encoded in all places which require type
+# <type "str"> (e.g. "start_response" callback). But in python 3.x that
+# approach results in type <class "bytes"> therefore TypeError is thrown.
+# Unfortunately u"..." syntax is forbidden in python <3.3.x.
 # So it's better to leave string literals at their default type behaviour
 # in python 2.x/3.x but just handle the encoding. Python 2 defines "unicode"
 # function for converting <type "str"> to <type "unicode"> which then behaves
@@ -210,7 +212,7 @@ class FUPFieldStorage(FieldStorage):
 
     def make_file (self, binary=None):
         """create secure tempfile in current directory"""
-        self.secure_filename = os.path.basename(self.filename)
+        self.secure_filename = ntbasename(posixbasename(self.filename))
         self.temp_filename = self.secure_filename + ".part"
         while os.path.exists(self.temp_filename):
             self.secure_filename += ".dup"
