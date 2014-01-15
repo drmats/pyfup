@@ -157,7 +157,7 @@ class Template(object):
             width: 16px; height: 16px;
             margin: 2px 6px 2px 6px;
             background-image: url(favicon.ico);
-            background-repeat: none;
+            background-repeat: no-repeat;
             background-position: center center;
         }
         fieldset { border: none; }
