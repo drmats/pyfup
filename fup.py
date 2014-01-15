@@ -186,8 +186,9 @@ class Template(object):
     # client javascript
     client_logic = dedent("""\
         /*global
-            console, document, FormData, XMLHttpRequest, window
+            document, FormData, Math, XMLHttpRequest, window
         */
+        /*jslint white: true */
         (function (u) {
             "use strict";
             u.init = function () {
@@ -212,16 +213,25 @@ class Template(object):
                             delete u.fd;
                             delete u.xhr;
                             u.message.innerHTML = 'Success!';
-                            console.log('done!');
                         }, false);
-                        u.xhr.addEventListener('progress', function () {
-                            console.log('progress...');
-                        }, false);
+                        u.xhr.upload.addEventListener(
+                            'progress',
+                            function (e) {
+                                if (e.lengthComputable) {
+                                    u.message.innerHTML =
+                                        'Uploading... ' +
+                                        Math.floor(e.loaded/1024) + 'kB / ' +
+                                        Math.floor(e.total/1024) + 'kB [' +
+                                        Math.floor(e.loaded/e.total*100) +
+                                        '%]';
+                                }
+                            }, false
+                        );
                         u.xhr.addEventListener('error', function () {
-                            console.log('error...');
+                            u.message.innerHTML = 'An error occured...';
                         }, false);
                         u.xhr.addEventListener('abort', function () {
-                            console.log('abort...');
+                            u.message.innerHTML = 'Aborted...';
                         }, false);
                         u.xhr.open('POST', 'upload', true);
                         u.xhr.send(u.fd);
@@ -229,9 +239,9 @@ class Template(object):
                         u.message.innerHTML = 'No file selected.';
                     }
                 }, false);
+                u.message.innerHTML = 'Ready.';
             };
             window.addEventListener('load', u.init, false);
-            window.u = u;
         }({}));"""
     )
 
