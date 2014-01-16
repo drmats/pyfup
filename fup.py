@@ -141,11 +141,9 @@ class Template(object):
             line-height: 28px;
             background-color: #CCCCCC;
         }
-        input.fselect {
-            display: block;
-            width: 50%; 
-            margin-bottom: 4px;
-        }
+        fieldset { border: none; height: 70px; }
+        input { height: 30px; margin-bottom: 5px; }
+        input.fselect { display: block; margin-top: 5px; width: 400px; }
         h2 {
             font-size: 20px;
             font-weight: bold;
@@ -160,7 +158,20 @@ class Template(object):
             background-repeat: no-repeat;
             background-position: center center;
         }
-        fieldset { border: none; }
+        .progressFrame { height: 30px; line-height: 30px; opacity: 0; }
+        .progressFrame .progressBar {
+            float: left;
+            width: 200px; height: 10px; margin: 10px;
+            border: 1px solid black;
+        }
+        .progressFrame .progressBar .progress {
+            width: 0px; height: 10px;
+            background-color: #777777;
+        }
+        .progressFrame .percentage {
+            float: left;
+        }
+        .message { clear: both;  margin-left: 10px; }
         a, a:visited { text-decoration: none; color: #0077CC; }
         a:hover { text-decoration: underline; }
         p { margin: 0px; padding: 0px; }"""
@@ -193,6 +204,16 @@ class Template(object):
         (function (u) {
             "use strict";
             u.init = function () {
+                u.pf = document.querySelector('.progressFrame');
+                u.pf.innerHTML =
+                    '<div class="progressBar">' +
+                        '<div class="progress"></div>' +
+                    '</div>' +
+                    '<div class="percentage">' +
+                        '[<span class="p">0</span>%]' +
+                    '</div>';
+                u.progress = document.querySelector('.progress');
+                u.p = document.querySelector('.p');
                 u.fs = document.querySelector('.fselect');
                 u.submit = document.querySelector('input[type="submit"]');
                 u.file = u.fs.files.item(0);
@@ -206,6 +227,7 @@ class Template(object):
                     if (u.file) {
                         this.disabled = true;
                         u.message.innerHTML = 'Uploading...';
+                        u.pf.style.opacity = 1;
                         u.fd = new FormData();
                         u.fd.append('file', u.file);
                         u.xhr = new XMLHttpRequest();
@@ -214,17 +236,20 @@ class Template(object):
                             delete u.fd;
                             delete u.xhr;
                             u.message.innerHTML = 'Success!';
+                            u.pf.style.opacity = 0;
                         }, false);
                         u.xhr.upload.addEventListener(
                             'progress',
                             function (e) {
+                                var p;
                                 if (e.lengthComputable) {
+                                    p = Math.floor(e.loaded/e.total*100);
+                                    u.progress.style.width = (2*p) + 'px';
+                                    u.p.innerHTML = p;
                                     u.message.innerHTML =
                                         'Uploading... ' +
                                         Math.floor(e.loaded/1024) + 'kB / ' +
-                                        Math.floor(e.total/1024) + 'kB [' +
-                                        Math.floor(e.loaded/e.total*100) +
-                                        '%]';
+                                        Math.floor(e.total/1024) + 'kB';
                                 }
                             }, false
                         );
@@ -318,11 +343,15 @@ class View(object):
                         <input type="submit" value="Upload File">
                     </fieldset>
                 </form>
-                <div class="message"></div>
+                <div class="progressFrame"></div>
+                <div class="message">
+                    Static uploading (no dynamic progress updates).
+                </div>
                 <script
                     type="text/javascript"
                     charset="utf-8"
-                    src="m.js">
+                    src="m.js"
+                >
                 </script>
             """)))
         )
