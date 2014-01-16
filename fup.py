@@ -22,7 +22,7 @@ from wsgiref.simple_server import make_server, software_version
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.3.4"
+__version__ = "0.4.0"
 __license__ = "BSD 2-Clause license"
 
 
