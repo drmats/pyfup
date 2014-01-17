@@ -394,7 +394,7 @@ class View(object):
                 "The file \"%s\" was uploaded successfully!" \
                     % form_file.filename
             bytes_read = os.stat(fn).st_size
-                    
+
         else:
             status = "200 OK"
             message = "No file was uploaded."
@@ -499,7 +499,7 @@ class Main(object):
         argparser.add_argument(
             "--host", action="store", default="0.0.0.0", type=str,
             help="Specify host [default: 0.0.0.0]"
-        )        
+        )
         argparser.add_argument(
             "port", action="store", default=8000, type=int,
             nargs="?", help="Specify alternate port [default: 8000]"
