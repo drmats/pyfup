@@ -11,6 +11,16 @@ a **really simple** [WSGI](http://wsgi.org)
 It allows to upload any file using
 [multipart/form-data](http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.2)
 form content type.
+When [Document Object Model Events](http://www.w3.org/TR/DOM-Level-2-Events/events.html),
+[Selectors API](http://www.w3.org/TR/selectors-api/),
+[File API](http://www.w3.org/TR/FileAPI/),
+[XMLHttpRequest](http://www.w3.org/TR/XMLHttpRequest/),
+[XMLHttpRequestUpload](http://www.w3.org/TR/XMLHttpRequest/#xmlhttprequestupload)
+and [FormData](http://www.w3.org/TR/XMLHttpRequest/#interface-formdata) are
+available on the client side then upload process is performed with the usage
+of client-side logic, allowing user to see the progress. Otherwise simple POST
+request from within [HTML form](http://www.w3.org/TR/html401/interact/forms.html)
+is performed.
 
 **pyfup** doesn't depend on any external library - just vanilla python
 environment is required.
