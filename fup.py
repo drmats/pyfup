@@ -248,8 +248,10 @@ class Template(object):
                             u.submit.disabled = false;
                             u.replaceInput();
                             delete u.fd; delete u.xhr;
+                            u.message.innerHTML =
+                                '"' + u.file.name +
+                                '" uploaded successfully!';
                             u.file = null;
-                            u.message.innerHTML = 'Success!';
                             u.pf.style.opacity = 0;
                         }, false);
                         u.xhr.upload.addEventListener(
