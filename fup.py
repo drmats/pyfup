@@ -209,10 +209,13 @@ class Template(object):
                 if (u.fs) {
                     u.fs.removeEventListener('change', u.onFsChange, false);
                     ni = document.createElement('input');
-                    [['type', 'file'], ['name', 'file'], ['class', 'fselect']]
-                        .forEach(function (attr) {
-                            ni.setAttribute(attr[0], attr[1]);
-                        });
+                    [
+                        ['type', 'file'],
+                        ['name', 'file'],
+                        ['class', 'fselect']
+                    ].forEach(function (attr) {
+                        ni.setAttribute(attr[0], attr[1]);
+                    });
                     u.fs.parentElement.replaceChild(ni, u.fs);
                 } else {
                     ni = document.querySelector('.fselect');
@@ -249,8 +252,11 @@ class Template(object):
                             u.replaceInput();
                             delete u.fd; delete u.xhr;
                             u.message.innerHTML =
-                                '"' + u.file.name +
-                                '" uploaded successfully!';
+                                '"' + u.file.name + '" ' +
+                                '[' + (Math.floor(
+                                    u.file.size / 1024 * 100
+                                ) / 100) + 'kB] ' +
+                                'uploaded successfully!';
                             u.file = null;
                             u.pf.style.opacity = 0;
                         }, false);
