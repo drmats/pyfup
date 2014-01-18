@@ -226,6 +226,7 @@ class Template(object):
                     evt.preventDefault();
                     if (u.file) {
                         this.disabled = true;
+                        u.fs.disabled = true;
                         u.message.innerHTML = 'Uploading...';
                         u.pf.style.opacity = 1;
                         u.fd = new FormData();
@@ -233,6 +234,7 @@ class Template(object):
                         u.xhr = new XMLHttpRequest();
                         u.xhr.addEventListener('load', function () {
                             u.submit.disabled = false;
+                            u.fs.disabled = false;
                             delete u.fd;
                             delete u.xhr;
                             u.message.innerHTML = 'Success!';
