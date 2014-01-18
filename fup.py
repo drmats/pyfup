@@ -197,7 +197,7 @@ class Template(object):
     # client javascript
     client_logic = dedent("""\
         /*global
-            document, FormData, Math,
+            document, File, FormData, Math,
             XMLHttpRequest, XMLHttpRequestUpload, window
         */
         /*jslint white: true */
@@ -292,7 +292,7 @@ class Template(object):
             if (
                 window.addEventListener  &&  window.removeEventListener  &&
                 XMLHttpRequest  &&  XMLHttpRequestUpload  &&  FormData  &&
-                document.querySelector  &&  document.createElement
+                File  &&  document.querySelector  &&  document.createElement
             ) {
                 window.addEventListener('load', u.init, false);
             }
