@@ -197,12 +197,29 @@ class Template(object):
     # client javascript
     client_logic = dedent("""\
         /*global
-            document, FormData, Math, XMLHttpRequest,
-            XMLHttpRequestUpload, window
+            document, FormData, Math,
+            XMLHttpRequest, XMLHttpRequestUpload, window
         */
         /*jslint white: true */
         (function (u) {
             "use strict";
+            u.onFsChange = function () { u.file = this.files.item(0); };
+            u.replaceInput = function () {
+                var ni;
+                if (u.fs) {
+                    u.fs.removeEventListener('change', u.onFsChange, false);
+                    ni = document.createElement('input');
+                    [['type', 'file'], ['name', 'file'], ['class', 'fselect']]
+                        .forEach(function (attr) {
+                            ni.setAttribute(attr[0], attr[1]);
+                        });
+                    u.fs.parentElement.replaceChild(ni, u.fs);
+                } else {
+                    ni = document.querySelector('.fselect');
+                }
+                ni.addEventListener('change', u.onFsChange, false);
+                u.fs = ni;
+            };
             u.init = function () {
                 u.pf = document.querySelector('.progressFrame');
                 u.pf.innerHTML =
@@ -214,19 +231,14 @@ class Template(object):
                     '</div>';
                 u.progress = document.querySelector('.progress');
                 u.p = document.querySelector('.p');
-                u.fs = document.querySelector('.fselect');
+                u.replaceInput();
                 u.submit = document.querySelector('input[type="submit"]');
                 u.file = u.fs.files.item(0);
                 u.message = document.querySelector('.message');
-                u.fs.addEventListener('change', function () {
-                    u.file = this.files.item(0);
-                }, false);
                 u.submit.addEventListener('click', function (evt) {
-                    evt.stopPropagation();
-                    evt.preventDefault();
+                    evt.stopPropagation(); evt.preventDefault();
                     if (u.file) {
-                        this.disabled = true;
-                        u.fs.disabled = true;
+                        this.disabled = u.fs.disabled = true;
                         u.message.innerHTML = 'Uploading...';
                         u.pf.style.opacity = 1;
                         u.fd = new FormData();
@@ -234,9 +246,9 @@ class Template(object):
                         u.xhr = new XMLHttpRequest();
                         u.xhr.addEventListener('load', function () {
                             u.submit.disabled = false;
-                            u.fs.disabled = false;
-                            delete u.fd;
-                            delete u.xhr;
+                            u.replaceInput();
+                            delete u.fd; delete u.xhr;
+                            u.file = null;
                             u.message.innerHTML = 'Success!';
                             u.pf.style.opacity = 0;
                         }, false);
@@ -270,9 +282,9 @@ class Template(object):
                 u.message.innerHTML = 'Ready.';
             };
             if (
-                window.addEventListener  &&
-                XMLHttpRequest  &&  XMLHttpRequestUpload  &&
-                FormData  &&  document.querySelector
+                window.addEventListener  &&  window.removeEventListener  &&
+                XMLHttpRequest  &&  XMLHttpRequestUpload  &&  FormData  &&
+                document.querySelector  &&  document.createElement
             ) {
                 window.addEventListener('load', u.init, false);
             }
