@@ -22,7 +22,7 @@ from wsgiref.simple_server import make_server, software_version
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __license__ = "BSD 2-Clause license"
 
 
@@ -197,7 +197,7 @@ class Template(object):
     # client javascript
     client_logic = dedent("""\
         /*global
-            document, File, FormData, Math,
+            Date, document, File, FormData, Math,
             XMLHttpRequest, XMLHttpRequestUpload, window
         */
         /*jslint white: true */
@@ -251,6 +251,7 @@ class Template(object):
                             u.submit.disabled = false;
                             u.replaceInput();
                             delete u.fd; delete u.xhr;
+                            delete u.now; delete u.loaded;
                             u.message.innerHTML =
                                 '"' + u.file.name + '" ' +
                                 '[' + (Math.floor(
@@ -263,15 +264,26 @@ class Template(object):
                         u.xhr.upload.addEventListener(
                             'progress',
                             function (e) {
-                                var p;
+                                var p, now, rate = 0;
                                 if (e.lengthComputable) {
+                                    now = Date.now();
                                     p = Math.floor(e.loaded/e.total*100);
                                     u.progress.style.width = (2*p) + 'px';
                                     u.p.innerHTML = p;
+                                    if (u.now) {
+                                        rate = Math.floor(
+                                            (e.loaded - u.loaded) / 
+                                            ((now - u.now) / 1000) /
+                                            1024
+                                        );
+                                    }
                                     u.message.innerHTML =
                                         'Uploading... ' +
                                         Math.floor(e.loaded/1024) + 'kB / ' +
-                                        Math.floor(e.total/1024) + 'kB';
+                                        Math.floor(e.total/1024) + 'kB ' +
+                                        '[' + rate + ' kB/s]';
+                                    u.now = now;
+                                    u.loaded = e.loaded;
                                 }
                             }, false
                         );
@@ -292,7 +304,8 @@ class Template(object):
             if (
                 window.addEventListener  &&  window.removeEventListener  &&
                 XMLHttpRequest  &&  XMLHttpRequestUpload  &&  FormData  &&
-                File  &&  document.querySelector  &&  document.createElement
+                Date  &&  Date.now  &&  File  && 
+                document.querySelector  &&  document.createElement
             ) {
                 window.addEventListener('load', u.init, false);
             }
