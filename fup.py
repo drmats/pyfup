@@ -22,7 +22,7 @@ from wsgiref.simple_server import make_server, software_version
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 __license__ = "BSD 2-Clause license"
 
 
@@ -250,38 +250,47 @@ class Template(object):
                         u.xhr.addEventListener('load', function () {
                             u.submit.disabled = false;
                             u.replaceInput();
-                            delete u.fd; delete u.xhr;
-                            delete u.now; delete u.loaded;
                             u.message.innerHTML =
                                 '"' + u.file.name + '" ' +
                                 '[' + (Math.floor(
                                     u.file.size / 1024 * 100
-                                ) / 100) + 'kB] ' +
-                                'uploaded successfully!';
+                                ) / 100) + 'kB]<br>' +
+                                'uploaded successfully in ' +
+                                Math.floor((u.now - u.start) / 1000) + 's!';
+                            delete u.fd; delete u.xhr;
+                            delete u.now; delete u.loaded; delete u.start;
                             u.file = null;
                             u.pf.style.opacity = 0;
                         }, false);
                         u.xhr.upload.addEventListener(
                             'progress',
                             function (e) {
-                                var p, now, rate = 0;
+                                var p, now, curRate, avgRate, time, eta;
                                 if (e.lengthComputable) {
                                     now = Date.now();
                                     p = Math.floor(e.loaded/e.total*100);
                                     u.progress.style.width = (2*p) + 'px';
                                     u.p.innerHTML = p;
-                                    if (u.now) {
-                                        rate = Math.floor(
-                                            (e.loaded - u.loaded) / 
-                                            ((now - u.now) / 1000) /
-                                            1024
-                                        );
-                                    }
+                                    curRate = Math.floor(
+                                        (e.loaded - u.loaded) /
+                                        ((now - u.now) / 1000) / 1024
+                                    );
+                                    avgRate = Math.floor(
+                                        (e.loaded) /
+                                        ((now - u.start) / 1000) / 1024
+                                    );
+                                    time = Math.floor((now - u.start) / 1000);
+                                    eta = Math.floor(
+                                        (e.total - e.loaded) / avgRate / 1000
+                                    );
                                     u.message.innerHTML =
                                         'Uploading... ' +
                                         Math.floor(e.loaded/1024) + 'kB / ' +
-                                        Math.floor(e.total/1024) + 'kB ' +
-                                        '[' + rate + ' kB/s]';
+                                        Math.floor(e.total/1024) + 'kB<br>' +
+                                        '[cur: ' + curRate + 'kB/s, ' +
+                                        'avg: ' + avgRate + 'kB/s]<br>' +
+                                        'elapsed time: ' + time + 's, ' +
+                                        'time left: ' + eta + 's';
                                     u.now = now;
                                     u.loaded = e.loaded;
                                 }
@@ -294,6 +303,8 @@ class Template(object):
                             u.message.innerHTML = 'Aborted...';
                         }, false);
                         u.xhr.open('POST', 'upload', true);
+                        u.loaded = 0;
+                        u.start = u.now = Date.now();
                         u.xhr.send(u.fd);
                     } else {
                         u.message.innerHTML = 'No file selected.';
