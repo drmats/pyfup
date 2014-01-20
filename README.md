@@ -46,7 +46,7 @@ the latest version.
 
 * standalone:
 
-        python fup.py [-h] [--host HOST] [-v] [port]
+        python fup.py [-h] [--host HOST] [--no-js] [-v] [port]
 
 * with [gunicorn](http://gunicorn.org/):
     

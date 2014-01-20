@@ -373,33 +373,36 @@ class View(object):
     """Views/actions for each URL defined in the application."""
 
     @staticmethod
-    def index (env):
+    def index (env, config):
         """File upload page with an appropriate html form."""
+        markup = dedent("""\
+            <form
+                action="upload"
+                method="post"
+                enctype="multipart/form-data"
+            >
+                <fieldset>
+                    <input type="file" name="file" class="fselect">
+                    <input type="submit" value="Upload File">
+                </fieldset>
+            </form>
+            <div class="progressFrame"></div>
+            <div class="message">
+                Static uploading (no dynamic progress updates).
+            </div>
+        """)
+        markup += dedent("""\
+            <script
+                type="text/javascript"
+                charset="utf-8"
+                src="m.js"
+            >
+            </script>
+        """) if not config["no_js"] else ""
         return (
             "200 OK", [
                 ("Content-Type", "text/html; charset=utf-8")
-            ], utf8_encode(Template.html(body=dedent("""\
-                <form
-                    action="upload"
-                    method="post"
-                    enctype="multipart/form-data"
-                >
-                    <fieldset>
-                        <input type="file" name="file" class="fselect">
-                        <input type="submit" value="Upload File">
-                    </fieldset>
-                </form>
-                <div class="progressFrame"></div>
-                <div class="message">
-                    Static uploading (no dynamic progress updates).
-                </div>
-                <script
-                    type="text/javascript"
-                    charset="utf-8"
-                    src="m.js"
-                >
-                </script>
-            """)))
+            ], utf8_encode(Template.html(body=markup))
         )
 
 
@@ -412,7 +415,7 @@ class View(object):
         else:
             def enc (s):
                 return utf8_encode(s)
-        def t (env):
+        def t (env, config={}):
             return (
                 "200 OK", [
                     ("Content-Type", content_type)
@@ -422,7 +425,7 @@ class View(object):
 
 
     @staticmethod
-    def upload (env):
+    def upload (env, config={}):
         """File upload action (called from an upload form)."""
         form = FUPFieldStorage(fp=env["wsgi.input"], environ=env)
         form_file = form["file"] if "file" in form else None
@@ -468,8 +471,8 @@ class Application(object):
 
     """Base class for a web application."""
 
-    def __init__ (self):
-        """"url routing" setup"""
+    def __init__ (self, config={}):
+        """"url routing" and application config setup"""
         self.urls = {
             "/" : View.index,
             "/favicon.ico" : View.template("favicon", "image/x-icon", True),
@@ -477,12 +480,14 @@ class Application(object):
             "/m.js" : View.template("client_logic", "application/javascript"),
             "/upload" : View.upload
         }
+        self.config = {"no_js" : False}
+        self.config.update(config)
 
 
     def dispatch (self, env):
         """Basic, url-based action dispatcher."""
         if env["PATH_INFO"] in self.urls:
-            return self.urls[env["PATH_INFO"]](env)
+            return self.urls[env["PATH_INFO"]](env, self.config)
         else:
             return (
                 "404 Not Found", [
@@ -530,7 +535,9 @@ class Main(object):
         print("[%s] -- exit: ctrl+C" % software_version)
         self.server_process = Process(
             target=self.run_server,
-            args=(args.host, args.port)
+            args=(args.host, args.port, {
+                "no_js" : args.no_js
+            })
         )
         self.server_process.start()
         self.main_loop()
@@ -544,11 +551,15 @@ class Main(object):
         )
         argparser.add_argument(
             "--host", action="store", default="0.0.0.0", type=str,
-            help="Specify host [default: 0.0.0.0]"
+            help="specify host [default: 0.0.0.0]"
+        )
+        argparser.add_argument(
+            "--no-js", action="store_true", default=False,
+            help="do not use JavaScript on client side"
         )
         argparser.add_argument(
             "port", action="store", default=8000, type=int,
-            nargs="?", help="Specify alternate port [default: 8000]"
+            nargs="?", help="specify alternate port [default: 8000]"
         )
         argparser.add_argument(
             "-v", "--version", action="version",
@@ -564,11 +575,11 @@ class Main(object):
         sys.exit()
 
 
-    def run_server (self, host, port):
+    def run_server (self, host, port, config):
         """WSGIServer main loop."""
         print("listening on %s:%u" % (host, port))
         make_server(
-            host, port, Application()
+            host, port, Application(config)
         ).serve_forever()
 
 
