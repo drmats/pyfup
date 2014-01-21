@@ -532,7 +532,7 @@ class Main(object):
         signal.signal(
             signal.SIGINT, self.exit_handler
         )
-        print("[%s] -- exit: ctrl+C" % software_version)
+        print("[%s] -- exit: ctrl+C" % software_version, file=sys.stderr)
         self.server_process = Process(
             target=self.run_server,
             args=(args.host, args.port, {
@@ -571,13 +571,13 @@ class Main(object):
     def exit_handler (self, sig_num, stack_frame):
         """SIGINT/KeyboardInterrupt handler."""
         self.server_process.terminate()
-        print("\nBye!")
+        print("\nBye!", file=sys.stderr)
         sys.exit()
 
 
     def run_server (self, host, port, config):
         """WSGIServer main loop."""
-        print("listening on %s:%u" % (host, port))
+        print("listening on %s:%u" % (host, port), file=sys.stderr)
         make_server(
             host, port, Application(config)
         ).serve_forever()
