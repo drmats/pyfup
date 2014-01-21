@@ -363,8 +363,12 @@ class FUPFieldStorage(FieldStorage):
             self.secure_filename += ".dup"
             self.temp_filename = self.secure_filename + ".part"
         print(
-            "-----------> - - [%s] receiving \"%s\""
-                % (time.strftime("%d/%b/%Y %H:%M:%S"), self.secure_filename),
+            "-----------> - - [%s] receiving \"%s\" (%s)" \
+                % (
+                    time.strftime("%d/%b/%Y %H:%M:%S"),
+                    self.secure_filename,
+                    self.headers["content-type"]
+                ),
             file=sys.stderr
         )
         return open(self.temp_filename, "wb+", buffering=1<<16)
