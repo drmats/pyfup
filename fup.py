@@ -354,6 +354,18 @@ class Template(object):
 class FUPFieldStorage(FieldStorage):
 
     """multipart/form-data request body parser"""
+    def __init__ (self, *args, **kwargs):
+        """call parent constructor and store reference to environ"""
+        if "environ" in kwargs:
+            self.__orig_env = kwargs["environ"]
+        elif len(args) >= 3:
+            self.__orig_env = args[3]
+        else:
+            self.__orig_env = {}
+        # unfortunately in python 2.x FieldStorage is an old-style class
+        # and thus super() call can't be used
+        FieldStorage.__init__(self, *args, **kwargs)
+
 
     def make_file (self, binary=None):
         """create secure tempfile in current directory"""
@@ -363,11 +375,15 @@ class FUPFieldStorage(FieldStorage):
             self.secure_filename += ".dup"
             self.temp_filename = self.secure_filename + ".part"
         print(
-            "-----------> - - [%s] receiving \"%s\" (%s)" \
+            "%s - - [%s] --> receiving \"%s\" (%s) %s" \
                 % (
+                    self.__orig_env["REMOTE_ADDR"] \
+                        if "REMOTE_ADDR" in self.__orig_env else "-",
                     time.strftime("%d/%b/%Y %H:%M:%S"),
                     self.secure_filename,
-                    self.headers["content-type"]
+                    self.headers["content-type"],
+                    self.__orig_env["CONTENT_LENGTH"] \
+                        if "CONTENT_LENGTH" in self.__orig_env else ""
                 ),
             file=sys.stderr
         )
