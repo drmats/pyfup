@@ -505,14 +505,46 @@ class Application(object):
             "/m.js" : View.template("client_logic", "application/javascript"),
             "/upload" : View.upload
         }
-        self.config = {"no_js" : False}
+        self.config = {
+            "no_js" : False,
+            "auth" : "no"
+        }
         self.config.update(config)
+
+
+    def authorized (self, env):
+        """check if user agent authorized itself properly"""
+        try:
+            return (
+                self.config["auth"] == "no" or (
+                    "HTTP_AUTHORIZATION" in env and (
+                        env["HTTP_AUTHORIZATION"].startswith("Basic ") and (
+                            base64.b64decode(
+                                env["HTTP_AUTHORIZATION"].split(" ")[1]
+                            ) == utf8_encode(self.config["auth"])
+                        )
+                    )
+                )
+            )
+        except:
+            return False
 
 
     def dispatch (self, env):
         """Basic, url-based action dispatcher."""
         if env["PATH_INFO"] in self.urls:
-            return self.urls[env["PATH_INFO"]](env, self.config)
+            if self.authorized(env):
+                return self.urls[env["PATH_INFO"]](env, self.config)
+            else:
+                return (
+                    "401 Not Authorized", [
+                        ("Content-Type", "text/plain; charset=utf-8"),
+                        (
+                            "WWW-Authenticate",
+                            "Basic realm=\"pyfup v%s\"" % __version__
+                        )
+                    ], utf8_encode("Not Authorized")
+                )
         else:
             return (
                 "404 Not Found", [
@@ -561,7 +593,8 @@ class Main(object):
         self.server_process = Process(
             target=self.run_server,
             args=(args.host, args.port, {
-                "no_js" : args.no_js
+                "no_js" : args.no_js,
+                "auth" : args.auth
             })
         )
         self.server_process.start()
@@ -577,6 +610,13 @@ class Main(object):
         argparser.add_argument(
             "--host", action="store", default="0.0.0.0", type=str,
             help="specify host [default: 0.0.0.0]"
+        )
+        argparser.add_argument(
+            "-a", "--auth", action="store", default="no", type=str,
+            help=dedent("""\
+                specify username:password that will be required \
+                from user agent [default: no authentication required]"""
+            )
         )
         argparser.add_argument(
             "--no-js", action="store_true", default=False,

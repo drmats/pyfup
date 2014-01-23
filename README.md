@@ -46,15 +46,31 @@ the latest version.
 
 * standalone:
 
-        python fup.py [-h] [--host HOST] [--no-js] [-v] [port]
+        $ python fup.py --help
+        usage: fup.py [-h] [--host HOST] [-a AUTH] [--no-js] [-v] [port]
+
+        Basic file upload WSGI application.
+
+        positional arguments:
+          port                  specify alternate port [default: 8000]
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          --host HOST           specify host [default: 0.0.0.0]
+          -a AUTH, --auth AUTH  specify username:password that will be required from
+                                user agent [default: no authentication required]
+          --no-js               do not use JavaScript on client side
+          -v, --version         show program's version number and exit
+
+        More at: https://github.com/drmats/pyfup
 
 * with [werkzeug](http://werkzeug.pocoo.org/):
 
-        python -m werkzeug.serving [-b HOST:PORT] fup:app
+        $ python -m werkzeug.serving [-b HOST:PORT] fup:app
 
 * with [gunicorn](http://gunicorn.org/):
     
-        gunicorn [-b HOST] --access-logfile - fup:app
+        $ gunicorn [-b HOST] --access-logfile - fup:app
 
 * in order to be able to accept big files and avoid "worker timeouts" it is
 desirable to use asynchronous ([eventlet](http://eventlet.net/),
@@ -62,17 +78,17 @@ desirable to use asynchronous ([eventlet](http://eventlet.net/),
 [tornado](http://www.tornadoweb.org/))
 [worker classes](http://docs.gunicorn.org/en/latest/settings.html#worker-processes):
 
-        gunicorn [-b HOST] -k eventlet --access-logfile - fup:app
-        gunicorn [-b HOST] -k gevent --access-logfile - fup:app
-        gunicorn [-b HOST] -k tornado fup:app
+        $ gunicorn [-b HOST] -k eventlet --access-logfile - fup:app
+        $ gunicorn [-b HOST] -k gevent --access-logfile - fup:app
+        $ gunicorn [-b HOST] -k tornado fup:app
 
 * with [Twisted Web](https://twistedmatrix.com/trac/wiki/TwistedWeb):
 
-        twistd -n web [--port PORT] --wsgi fup.app
+        $ twistd -n web [--port PORT] --wsgi fup.app
 
 * with [uWSGI](http://uwsgi-docs.readthedocs.org/en/latest/):
 
-        uwsgi --plugin python --http :[PORT] --wsgi-file fup.py --callable app
+        $ uwsgi --plugin python --http :[PORT] --wsgi-file fup.py --callable app
 
 
 
