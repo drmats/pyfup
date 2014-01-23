@@ -48,6 +48,10 @@ the latest version.
 
         python fup.py [-h] [--host HOST] [--no-js] [-v] [port]
 
+* with [werkzeug](http://werkzeug.pocoo.org/):
+
+        python -m werkzeug.serving [-b HOST:PORT] fup:app
+
 * with [gunicorn](http://gunicorn.org/):
     
         gunicorn [-b HOST] --access-logfile - fup:app
@@ -85,5 +89,5 @@ for more details.
 ## notes
 
 The script was tested and is known to work with python versions 2.7.2, 2.7.3,
-2.7.5, 3.3.0, 3.3.2 and 3.3.3 on linux and windows, but should also work on
-python version >=2.6.x.
+2.7.5, 3.3.0, 3.3.2 and 3.3.3 on linux and windows, but generally it should work
+on all 2.6.x, 2.7.x and 3.3.x.
