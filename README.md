@@ -1,6 +1,6 @@
 # pyfup
 
-Basic file upload WSGI application (python >=2.6.x/>=3.x)
+Basic file upload WSGI application (python 2.6.x/2.7.x/3.3.x)
 
 This script brings up a
 [simple\_server](http://docs.python.org/3.3/library/wsgiref.html#module-wsgiref.simple_server)
@@ -25,10 +25,9 @@ is performed.
 **pyfup** doesn't depend on any external library - just vanilla python
 environment is required.
 
-Don't use it in production environment as it has not been
-reviewed for security issues, however it's handy for ad-hoc
-file transfers between machines over
-[HTTP protocol](http://www.ietf.org/rfc/rfc2616.txt).
+Don't use it in production environment as it has not been reviewed
+for security issues, however it's handy for ad-hoc file transfers
+between machines over [HTTP protocol](http://www.ietf.org/rfc/rfc2616.txt).
 
 
 
@@ -105,5 +104,5 @@ for more details.
 ## notes
 
 The script was tested and is known to work with python versions 2.7.2, 2.7.3,
-2.7.5, 3.3.0, 3.3.2 and 3.3.3 on linux and windows, but generally it should work
-on all 2.6.x, 2.7.x and 3.3.x.
+2.7.5, 3.3.0, 3.3.2 and 3.3.3 on linux and windows, but theoretically it should
+work on all 2.6.x, 2.7.x and 3.3.x.

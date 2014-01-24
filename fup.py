@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Basic file upload WSGI application (python >=2.6.x/>=3.x).
+Basic file upload WSGI application (python 2.6.x/2.7.x/3.3.x).
 
 This script brings up a simple_server from python's wsgiref package
 and runs a really simple web application on it. It allows to upload
