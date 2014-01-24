@@ -1,28 +1,48 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Basic file upload WSGI application (python >=2.6.x/>=3.x).
+"""
+Basic file upload WSGI application (python >=2.6.x/>=3.x).
 
-This script brings up a simple_server from python's wsgiref
-package and runs a really simple web application on it.
-It allows to upload any file using multipart/form-data encoding.
-Don't use it in production environment as it has not been
-reviewed for security issues, however it's handy for ad-hoc
-file transfers between machines over HTTP protocol.
+This script brings up a simple_server from python's wsgiref package
+and runs a really simple web application on it. It allows to upload
+any file using multipart/form-data encoding. Don't use it in production
+environment as it has not been reviewed for security issues, however
+it's handy for ad-hoc file transfers between machines over HTTP protocol.
 
 https://github.com/drmats/pyfup
 """
 
 from __future__ import print_function, absolute_import
-import sys, os, time, signal, argparse, base64, gzip
+
+import sys
+import os
+import time
+import signal
+import argparse
+import base64
+import gzip
+
 from ntpath import basename as ntbasename
 from posixpath import basename as posixbasename
+
 from cgi import FieldStorage
 from wsgiref.simple_server import make_server, software_version
 
+__all__ = [
+    "app",
+    "Application",
+    "FUPFieldStorage",
+    "GzipGlue",
+    "Main",
+    "Template",
+    "utf8_encode",
+    "View"
+]
+
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 __license__ = "BSD 2-Clause license"
 
 
@@ -279,7 +299,9 @@ class Template(object):
                                         (e.loaded) /
                                         ((now - u.start) / 1000) / 1024
                                     );
-                                    time = Math.floor((now - u.start) / 1000);
+                                    time = Math.floor(
+                                        (now - u.start) / 1000
+                                    );
                                     eta = Math.floor(
                                         (e.total - e.loaded) / avgRate / 1000
                                     );
@@ -500,9 +522,15 @@ class Application(object):
         """"url routing" and application config setup"""
         self.urls = {
             "/" : View.index,
-            "/favicon.ico" : View.template("favicon", "image/x-icon", True),
-            "/m.css" : View.template("css", "text/css"),
-            "/m.js" : View.template("client_logic", "application/javascript"),
+            "/favicon.ico" : View.template(
+                "favicon", "image/x-icon", True
+            ),
+            "/m.css" : View.template(
+                "css", "text/css"
+            ),
+            "/m.js" : View.template(
+                "client_logic", "application/javascript"
+            ),
             "/upload" : View.upload
         }
         self.config = {
@@ -589,7 +617,11 @@ class Main(object):
         signal.signal(
             signal.SIGINT, self.exit_handler
         )
-        print("[%s] -- exit: ctrl+C" % software_version, file=sys.stderr)
+        print(
+            "[%s] -- exit: ctrl+C" \
+                % software_version,
+            file=sys.stderr
+        )
         self.server_process = Process(
             target=self.run_server,
             args=(args.host, args.port, {
@@ -642,7 +674,11 @@ class Main(object):
 
     def run_server (self, host, port, config):
         """WSGIServer main loop."""
-        print("listening on %s:%u" % (host, port), file=sys.stderr)
+        print(
+            "listening on %s:%u" \
+                % (host, port),
+            file=sys.stderr
+        )
         make_server(
             host, port, Application(config)
         ).serve_forever()
