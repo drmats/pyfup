@@ -46,7 +46,9 @@ the latest version.
 * standalone:
 
         $ python fup.py --help
-        usage: fup.py [-h] [--host HOST] [-a AUTH] [--no-js] [-v] [port]
+        usage: fup.py [-h] [--host HOST] [--ssl] [-k KEY] [-c CERT] [-a AUTH]
+                      [--no-js] [-v]
+                      [port]
 
         Basic file upload WSGI application.
 
@@ -56,12 +58,16 @@ the latest version.
         optional arguments:
           -h, --help            show this help message and exit
           --host HOST           specify host [default: 0.0.0.0]
+          --ssl                 use SSL
+          -k KEY, --key KEY     path to SSL key file
+          -c CERT, --cert CERT  path to SSL certificate file
           -a AUTH, --auth AUTH  specify username:password that will be required from
                                 user agent [default: no authentication required]
           --no-js               do not use JavaScript on client side
           -v, --version         show program's version number and exit
 
         More at: https://github.com/drmats/pyfup
+
 
 * with [werkzeug](http://werkzeug.pocoo.org/):
 
@@ -88,6 +94,20 @@ desirable to use asynchronous ([eventlet](http://eventlet.net/),
 * with [uWSGI](http://uwsgi-docs.readthedocs.org/en/latest/):
 
         $ uwsgi --plugin python --http :[PORT] --wsgi-file fup.py --callable app
+
+
+
+
+## notes on SSL
+
+The easiest way to generate self-signed certificate with
+[OpenSSL](https://www.openssl.org/):
+
+        $ openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout ssl.key -out ssl.cert
+
+Beware that browser will complain that it can't confirm identification,
+and on first connection **pyfup** will log in console output
+a request error "SSLV3_ALERT_CERTIFICATE_UNKNOWN".
 
 
 

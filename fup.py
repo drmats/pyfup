@@ -27,12 +27,17 @@ from ntpath import basename as ntbasename
 from posixpath import basename as posixbasename
 
 from cgi import FieldStorage
-from wsgiref.simple_server import make_server, software_version
+from wsgiref.simple_server import (
+    make_server,
+    software_version,
+    WSGIRequestHandler
+)
 
 __all__ = [
     "app",
     "Application",
     "FUPFieldStorage",
+    "FUPRequestHandler",
     "GzipGlue",
     "Main",
     "Template",
@@ -42,7 +47,7 @@ __all__ = [
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.4.4"
+__version__ = "0.5.0"
 __license__ = "BSD 2-Clause license"
 
 
@@ -376,6 +381,7 @@ class Template(object):
 class FUPFieldStorage(FieldStorage):
 
     """multipart/form-data request body parser"""
+
     def __init__ (self, *args, **kwargs):
         """call parent constructor and store reference to environ"""
         if "environ" in kwargs:
@@ -535,7 +541,7 @@ class Application(object):
         }
         self.config = {
             "no_js" : False,
-            "auth" : "no"
+            "auth" : "__NO_AUTH__"
         }
         self.config.update(config)
 
@@ -544,7 +550,7 @@ class Application(object):
         """check if user agent authorized itself properly"""
         try:
             return (
-                self.config["auth"] == "no" or (
+                self.config["auth"] == "__NO_AUTH__" or (
                     "HTTP_AUTHORIZATION" in env and (
                         env["HTTP_AUTHORIZATION"].startswith("Basic ") and (
                             base64.b64decode(
@@ -604,6 +610,34 @@ class Application(object):
 
 
 
+# WSGIRequestHandler class subclassed to log eventually occuring
+# SSL socket exceptions in a nice one-liner without long traceback
+class FUPRequestHandler(WSGIRequestHandler):
+
+    """WSGI protocol"""
+
+    def handle (self):
+        """default request handler"""
+        # python 2.x and 3.x compatible try-except code
+        try:
+            WSGIRequestHandler.handle(self)
+        except:
+            e = sys.exc_info()
+            print(
+                "%s - - [%s] request error: %s \"%s\"" \
+                    % (
+                        self.client_address[0],
+                        time.strftime("%d/%b/%Y %H:%M:%S"),
+                        e[0],
+                        e[1].reason \
+                            if hasattr(e[1], "reason") else e[1].strerror
+                    ),
+                file=sys.stderr
+            )
+
+
+
+
 # Parse command-line arguments,
 # instantiate Application object
 # and run WSGI server.
@@ -626,7 +660,11 @@ class Main(object):
             target=self.run_server,
             args=(args.host, args.port, {
                 "no_js" : args.no_js,
-                "auth" : args.auth
+                "auth" : args.auth,
+                "ppid" : os.getpid(),
+                "ssl" : args.ssl,
+                "key" : args.key,
+                "cert" : args.cert
             })
         )
         self.server_process.start()
@@ -644,7 +682,19 @@ class Main(object):
             help="specify host [default: 0.0.0.0]"
         )
         argparser.add_argument(
-            "-a", "--auth", action="store", default="no", type=str,
+            "--ssl", action="store_true", default=False,
+            help="use SSL"
+        )
+        argparser.add_argument(
+            "-k", "--key", action="store", default="__NO_KEY__", type=str,
+            help="path to SSL key file"
+        )
+        argparser.add_argument(
+            "-c", "--cert", action="store", default="__NO_CERT__", type=str,
+            help="path to SSL certificate file"
+        )
+        argparser.add_argument(
+            "-a", "--auth", action="store", default="__NO_AUTH__", type=str,
             help=dedent("""\
                 specify username:password that will be required \
                 from user agent [default: no authentication required]"""
@@ -674,14 +724,62 @@ class Main(object):
 
     def run_server (self, host, port, config):
         """WSGIServer main loop."""
+        httpd = make_server(
+            host, port, Application(config),
+            handler_class=FUPRequestHandler
+        )
+        if config["ssl"]:
+            if config["key"] == "__NO_KEY__":
+                print(
+                    "Provide a valid path to SSL key file " + \
+                    "using --key argument.",
+                    file=sys.stderr
+                )
+                os.kill(config["ppid"], signal.SIGINT)
+                return
+
+            if not os.path.isfile(config["cert"]):
+                print(
+                    "Provide a valid path to SSL certificate " + \
+                    "file using --cert argument.",
+                    file=sys.stderr
+                )
+                os.kill(config["ppid"], signal.SIGINT)
+                return
+
+            try:
+                import ssl
+                httpd.socket = \
+                    ssl.wrap_socket(
+                        httpd.socket,
+                        keyfile=config["key"],
+                        certfile=config["cert"],
+                        cert_reqs=ssl.CERT_NONE,
+                        server_side=True
+                    )
+            except ImportError:
+                print(
+                    "SSL is not supported on this system.",
+                    file=sys.stderr
+                )
+                os.kill(config["ppid"], signal.SIGINT)
+                return
+            except:                
+                e = sys.exc_info()
+                print(
+                    "Error: %s - \"%s\"." \
+                        % (e[0], e[1].strerror),
+                    file=sys.stderr
+                )
+                os.kill(config["ppid"], signal.SIGINT)
+                return
+
         print(
-            "listening on %s:%u" \
-                % (host, port),
+            "listening on %s:%u%s" \
+                % (host, port, " (SSL enabled)" if config["ssl"] else ""),
             file=sys.stderr
         )
-        make_server(
-            host, port, Application(config)
-        ).serve_forever()
+        httpd.serve_forever()
 
 
     def main_loop (self):
