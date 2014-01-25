@@ -678,8 +678,8 @@ class Main(object):
             epilog="More at: https://github.com/drmats/pyfup"
         )
         argparser.add_argument(
-            "--host", action="store", default="0.0.0.0", type=str,
-            help="specify host [default: 0.0.0.0]"
+            "-v", "--version", action="version",
+            version="%(prog)s " + __version__
         )
         argparser.add_argument(
             "--ssl", action="store_true", default=False,
@@ -705,12 +705,12 @@ class Main(object):
             help="do not use JavaScript on client side"
         )
         argparser.add_argument(
-            "port", action="store", default=8000, type=int,
-            nargs="?", help="specify alternate port [default: 8000]"
+            "--host", action="store", default="0.0.0.0", type=str,
+            help="specify host [default: 0.0.0.0]"
         )
         argparser.add_argument(
-            "-v", "--version", action="version",
-            version="%(prog)s " + __version__
+            "port", action="store", default=8000, type=int,
+            nargs="?", help="specify alternate port [default: 8000]"
         )
         return argparser.parse_args()
 
@@ -729,7 +729,7 @@ class Main(object):
             handler_class=FUPRequestHandler
         )
         if config["ssl"]:
-            if config["key"] == "__NO_KEY__":
+            if not os.path.isfile(config["key"]):
                 print(
                     "Provide a valid path to SSL key file " + \
                     "using --key argument.",
