@@ -737,7 +737,6 @@ class Main(object):
                 )
                 os.kill(config["ppid"], signal.SIGINT)
                 return
-
             if not os.path.isfile(config["cert"]):
                 print(
                     "Provide a valid path to SSL certificate " + \
@@ -746,7 +745,6 @@ class Main(object):
                 )
                 os.kill(config["ppid"], signal.SIGINT)
                 return
-
             try:
                 import ssl
                 httpd.socket = \
@@ -773,6 +771,10 @@ class Main(object):
                 )
                 os.kill(config["ppid"], signal.SIGINT)
                 return
+        elif os.path.isfile(config["key"]) or os.path.isfile(config["cert"]):
+            print("Use --ssl switch.", file=sys.stderr)
+            os.kill(config["ppid"], signal.SIGINT)
+            return
 
         print(
             "listening on %s:%u%s" \
