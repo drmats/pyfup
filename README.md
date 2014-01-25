@@ -103,7 +103,8 @@ desirable to use asynchronous ([eventlet](http://eventlet.net/),
 The easiest way to generate self-signed certificate with
 [OpenSSL](https://www.openssl.org/):
 
-        $ openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout ssl.key -out ssl.cert
+        $ openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 \
+          -keyout ssl.key -out ssl.cert
 
 Beware that browser will complain that it can't confirm identification
 and on first connection **pyfup** will log a request error
