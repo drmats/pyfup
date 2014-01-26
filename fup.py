@@ -15,14 +15,15 @@ https://github.com/drmats/pyfup
 
 from __future__ import print_function, absolute_import
 
-import sys
 import os
+import sys
 import time
 import signal
 import argparse
 import base64
 import gzip
 import codecs
+import re
 
 from ntpath import basename as ntbasename
 from posixpath import basename as posixbasename
@@ -675,7 +676,7 @@ class FUPRequestHandler(WSGIRequestHandler):
 
     def log_error (self, format, *args):
         """log an error"""
-        self.log_message(format, *args)
+        self.log_message(re.sub("(%.)", "\"\\1\"", format), *args)
 
 
 
