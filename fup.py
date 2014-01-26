@@ -22,6 +22,7 @@ import signal
 import argparse
 import base64
 import gzip
+import codecs
 
 from ntpath import basename as ntbasename
 from posixpath import basename as posixbasename
@@ -47,7 +48,7 @@ __all__ = [
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 __license__ = "BSD 2-Clause license"
 
 
@@ -125,13 +126,13 @@ except ImportError:
 # correctly while encoding back to "utf-8". Thus two definitions of 
 # utf8_encode function below.
 if hasattr(__builtins__, "unicode"):
-    def utf8_encode (s):
+    def utf8_encode (s, e="strict"):
         """python 2.x utf-8 encoder"""
-        return unicode(s, "utf-8").encode("utf-8")
+        return unicode(s, "utf-8").encode("utf-8", errors=e)
 else:
-    def utf8_encode (s):
+    def utf8_encode (s, e="strict"):
         """python 3.x utf-8 encoder"""
-        return s.encode("utf-8")
+        return s.encode("utf-8", errors=e)
 
 
 
@@ -383,7 +384,7 @@ class FUPFieldStorage(FieldStorage):
     """multipart/form-data request body parser"""
 
     def __init__ (self, *args, **kwargs):
-        """call parent constructor and store reference to environ"""
+        """call parent constructor and store reference to the environ"""
         if "environ" in kwargs:
             self.__orig_env = kwargs["environ"]
         elif len(args) >= 3:
@@ -396,23 +397,22 @@ class FUPFieldStorage(FieldStorage):
 
 
     def make_file (self, binary=None):
-        """create secure tempfile in current directory"""
+        """create secure tempfile in the current directory"""
         self.secure_filename = ntbasename(posixbasename(self.filename))
         self.temp_filename = self.secure_filename + ".part"
         while os.path.exists(self.temp_filename):
             self.secure_filename += ".dup"
             self.temp_filename = self.secure_filename + ".part"
         print(
-            "%s - - [%s] --> receiving \"%s\" (%s) %s" \
-                % (
-                    self.__orig_env["REMOTE_ADDR"] \
-                        if "REMOTE_ADDR" in self.__orig_env else "-",
-                    time.strftime("%d/%b/%Y %H:%M:%S"),
-                    self.secure_filename,
-                    self.headers["content-type"],
-                    self.__orig_env["CONTENT_LENGTH"] \
-                        if "CONTENT_LENGTH" in self.__orig_env else ""
-                ),
+            "%s - - [%s] --> receiving \"%s\" (%s) %s" % (
+                self.__orig_env["REMOTE_ADDR"] \
+                    if "REMOTE_ADDR" in self.__orig_env else "-",
+                time.strftime("%d/%b/%Y %H:%M:%S"),
+                self.secure_filename,
+                self.headers["content-type"],
+                self.__orig_env["CONTENT_LENGTH"] \
+                    if "CONTENT_LENGTH" in self.__orig_env else ""
+            ),
             file=sys.stderr
         )
         return open(self.temp_filename, "wb+", buffering=1<<16)
@@ -614,7 +614,7 @@ class Application(object):
 # SSL socket exceptions in a nice one-liner without long traceback
 class FUPRequestHandler(WSGIRequestHandler):
 
-    """WSGI protocol"""
+    """WSGI protocol."""
 
     def handle (self):
         """default request handler"""
@@ -624,16 +624,58 @@ class FUPRequestHandler(WSGIRequestHandler):
         except:
             e = sys.exc_info()
             print(
-                "%s - - [%s] request error: %s \"%s\"" \
-                    % (
-                        self.client_address[0],
-                        time.strftime("%d/%b/%Y %H:%M:%S"),
-                        e[0],
-                        e[1].reason \
-                            if hasattr(e[1], "reason") else e[1].strerror
-                    ),
+                "%s - - [%s] request error: %s \"%s\"" % (
+                    self.client_address[0],
+                    time.strftime("%d/%b/%Y %H:%M:%S"),
+                    e[0],
+                    utf8_encode(e[1].reason, e="replace") \
+                        if hasattr(e[1], "reason") \
+                        else utf8_encode(e[1].strerror, e="replace")
+                ),
                 file=sys.stderr
             )
+
+
+    def log_message (self, format, *args):
+        """used by all default logging functions"""
+        def simple_ascii (s, aux=(lambda x: x)):
+            """ord 32 - 126 check"""
+            answer = True
+            for c in s:
+                if not (aux(c) >= 32 and aux(c) <= 126):
+                    answer = False
+                    break
+            return answer
+        safe_args = []
+        for a in args:
+            if isinstance(a, int):
+                safe_args.append(a)
+            else:
+                if (
+                    isinstance(a, str) and simple_ascii(a, ord) or
+                    not isinstance(a, str) and simple_ascii(a)
+                ):
+                        safe_args.append(a)
+                else:
+                    safe_args.append(
+                        "unexpected content (base64): " + codecs.decode(
+                            base64.b64encode(utf8_encode(a, e="replace")),
+                            "utf-8"
+                        )
+                    )
+        print(
+            "%s - - [%s] %s" % (
+                self.address_string(),
+                self.log_date_time_string(),
+                format % tuple(safe_args)
+            ),
+            file=sys.stderr
+        )
+
+
+    def log_error (self, format, *args):
+        """log an error"""
+        self.log_message(format, *args)
 
 
 
@@ -652,8 +694,7 @@ class Main(object):
             signal.SIGINT, self.exit_handler
         )
         print(
-            "[%s] -- exit: ctrl+C" \
-                % software_version,
+            "[%s] -- exit: ctrl+C" % software_version,
             file=sys.stderr
         )
         self.server_process = Process(
@@ -765,8 +806,7 @@ class Main(object):
             except:                
                 e = sys.exc_info()
                 print(
-                    "Error: %s - \"%s\"." \
-                        % (e[0], e[1].strerror),
+                    "Error: %s - \"%s\"." % (e[0], e[1].strerror),
                     file=sys.stderr
                 )
                 os.kill(config["ppid"], signal.SIGINT)
@@ -775,10 +815,11 @@ class Main(object):
             print("Use --ssl switch.", file=sys.stderr)
             os.kill(config["ppid"], signal.SIGINT)
             return
-
         print(
-            "listening on %s:%u%s" \
-                % (host, port, " (SSL enabled)" if config["ssl"] else ""),
+            "listening on %s:%u%s"  % (
+                host, port,
+                " (SSL enabled)" if config["ssl"] else ""
+            ),
             file=sys.stderr
         )
         httpd.serve_forever()
