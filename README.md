@@ -100,14 +100,14 @@ the latest version.
 
 ## notes on SSL
 
-The easiest way to generate self-signed certificate with
+The easiest way to generate private key and self-signed certificate with
 [OpenSSL](https://www.openssl.org/):
 
     $ openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout ssl.key -out ssl.cert
 
-Beware that browser will complain that it can't confirm identification
-and on first connection **pyfup** will log a request error
-"SSLV3_ALERT_CERTIFICATE_UNKNOWN".
+Beware that browser will complain that it can't confirm site's identity
+and on first connection **pyfup** can log a request error
+"SSLV3_ALERT_CERTIFICATE_UNKNOWN" (this behavior is user-agent dependent).
 
 
 
