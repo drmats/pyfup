@@ -19,7 +19,6 @@ import os
 import sys
 import time
 import signal
-import argparse
 import base64
 import gzip
 import codecs
@@ -49,7 +48,7 @@ __all__ = [
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 __license__ = "BSD 2-Clause license"
 
 
@@ -715,46 +714,58 @@ class Main(object):
 
     def parse_args (self):
         """Command-line argument parser."""
-        argparser = argparse.ArgumentParser(
-            description="Basic file upload WSGI application.",
-            epilog="More at: https://github.com/drmats/pyfup"
-        )
-        argparser.add_argument(
-            "-v", "--version", action="version",
-            version="%(prog)s " + __version__
-        )
-        argparser.add_argument(
-            "--ssl", action="store_true", default=False,
-            help="use SSL"
-        )
-        argparser.add_argument(
-            "-k", "--key", action="store", default="__NO_KEY__", type=str,
-            help="path to SSL key file"
-        )
-        argparser.add_argument(
-            "-c", "--cert", action="store", default="__NO_CERT__", type=str,
-            help="path to SSL certificate file"
-        )
-        argparser.add_argument(
-            "-a", "--auth", action="store", default="__NO_AUTH__", type=str,
-            help=dedent("""\
-                specify username:password that will be required \
-                from user agent [default: no authentication required]"""
+        try:
+            from argparse import ArgumentParser
+            argparser = ArgumentParser(
+                description="Basic file upload WSGI application.",
+                epilog="More at: https://github.com/drmats/pyfup"
             )
-        )
-        argparser.add_argument(
-            "--no-js", action="store_true", default=False,
-            help="do not use JavaScript on client side"
-        )
-        argparser.add_argument(
-            "--host", action="store", default="0.0.0.0", type=str,
-            help="specify host [default: 0.0.0.0]"
-        )
-        argparser.add_argument(
-            "port", action="store", default=8000, type=int,
-            nargs="?", help="specify alternate port [default: 8000]"
-        )
-        return argparser.parse_args()
+            argparser.add_argument(
+                "-v", "--version", action="version",
+                version="%(prog)s " + __version__
+            )
+            argparser.add_argument(
+                "--ssl", action="store_true", default=False,
+                help="use SSL"
+            )
+            argparser.add_argument(
+                "-k", "--key", action="store", default="__NO_KEY__",
+                type=str, help="path to SSL key file"
+            )
+            argparser.add_argument(
+                "-c", "--cert", action="store", default="__NO_CERT__",
+                type=str, help="path to SSL certificate file"
+            )
+            argparser.add_argument(
+                "-a", "--auth", action="store", default="__NO_AUTH__",
+                type=str, help=dedent("""\
+                    specify username:password that will be required \
+                    from user agent [default: no authentication required]"""
+                )
+            )
+            argparser.add_argument(
+                "--no-js", action="store_true", default=False,
+                help="do not use JavaScript on client side"
+            )
+            argparser.add_argument(
+                "--host", action="store", default="0.0.0.0",
+                type=str, help="specify host [default: 0.0.0.0]"
+            )
+            argparser.add_argument(
+                "port", action="store", default=8000, type=int,
+                nargs="?", help="specify alternate port [default: 8000]"
+            )
+            return argparser.parse_args()
+        except ImportError:
+            class ArgsStub:
+                host = "0.0.0.0"
+                port = 8000
+                no_js = False
+                auth = "__NO_AUTH__"
+                ssl = False
+                key = "__NO_KEY__"
+                cert = "__NO_CERT__"
+            return ArgsStub()
 
 
     def exit_handler (self, sig_num, stack_frame):
