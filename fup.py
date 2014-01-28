@@ -780,7 +780,7 @@ class Main(object):
             return ArgsStub()
 
 
-    def exit_handler (self, sig_num, stack_frame):
+    def exit_handler (self, sig_num=None, stack_frame=None):
         """SIGINT/KeyboardInterrupt handler."""
         self.server_process.terminate()
         print("\nBye!", file=sys.stderr)
@@ -851,8 +851,11 @@ class Main(object):
 
     def main_loop (self):
         """Main process loop (just to keep it alive)."""
-        while True:
-            input()
+        try:
+            while True:
+                input()
+        except EOFError:
+            self.exit_handler()
 
 
 
