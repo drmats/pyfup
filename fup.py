@@ -128,7 +128,7 @@ except ImportError:
 if hasattr(__builtins__, "unicode"):
     def utf8_encode (s, e="strict"):
         """python 2.x utf-8 encoder"""
-        return unicode(s, "utf-8").encode("utf-8", errors=e)
+        return unicode(s, "utf-8").encode("utf-8", e)
 else:
     def utf8_encode (s, e="strict"):
         """python 3.x utf-8 encoder"""
