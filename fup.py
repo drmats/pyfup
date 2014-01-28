@@ -65,8 +65,13 @@ class GzipGlue(object):
         """Emulates gzip.compress from python >=3.2."""
         osio = StringIO()
         try:
-            with gzip.GzipFile(fileobj=osio, mode="wb") as g:
+            if hasattr(gzip.GzipFile, "__exit__"):
+                with gzip.GzipFile(fileobj=osio, mode="wb") as g:
+                    g.write(s)
+            else:
+                g = gzip.GzipFile(fileobj=osio, mode="wb")
                 g.write(s)
+                g.close()
             return osio.getvalue()
         finally:
             osio.close()
@@ -77,8 +82,15 @@ class GzipGlue(object):
         """Emulates gzip.decompress from python >=3.2."""
         isio = StringIO(s)
         try:
-            with gzip.GzipFile(fileobj=isio, mode="rb") as g:
-                return g.read()
+            if hasattr(gzip.GzipFile, "__exit__"):
+                with gzip.GzipFile(fileobj=isio, mode="rb") as g:
+                    return g.read()
+            else:
+                try:
+                    g = gzip.GzipFile(fileobj=isio, mode="rb")
+                    return g.read()
+                finally:
+                    g.close()
         finally:
             isio.close()
 
