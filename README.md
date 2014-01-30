@@ -97,7 +97,7 @@ the latest version.
 
   * with [waitress](http://docs.pylonsproject.org/projects/waitress/en/latest/):
 
-        $ waitress-serve --port 8000 fup:app
+        $ waitress-serve --port [PORT] fup:app
 
 
 
