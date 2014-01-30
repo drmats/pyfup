@@ -95,6 +95,10 @@ the latest version.
 
         $ uwsgi --plugin python --http :[PORT] --wsgi-file fup.py --callable app
 
+  * with [waitress](http://docs.pylonsproject.org/projects/waitress/en/latest/):
+
+        $ waitress-serve --port 8000 fup:app
+
 
 
 
