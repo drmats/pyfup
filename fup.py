@@ -702,13 +702,31 @@ class Main(object):
     def __init__ (self):
         """Program entry point."""
         args = self.parse_args()
-        signal.signal(
-            signal.SIGINT, self.exit_handler
-        )
+        signal.signal(signal.SIGINT, self.exit)
         print(
             "[%s] -- exit: ctrl+C" % software_version,
             file=sys.stderr
         )
+
+        if args.ssl:
+            if not os.path.isfile(args.key):
+                print(
+                    "Provide a valid path to SSL key file " + \
+                    "using --key argument.",
+                    file=sys.stderr
+                )
+                self.exit()
+            if not os.path.isfile(args.cert):
+                print(
+                    "Provide a valid path to SSL certificate " + \
+                    "file using --cert argument.",
+                    file=sys.stderr
+                )
+                self.exit()
+        elif os.path.isfile(args.key) or os.path.isfile(args.cert):
+            print("Use --ssl switch.", file=sys.stderr)
+            self.exit()
+
         self.server_process = Process(
             target=self.run_server,
             args=(args.host, args.port, {
@@ -780,36 +798,21 @@ class Main(object):
             return ArgsStub()
 
 
-    def exit_handler (self, sig_num=None, stack_frame=None):
+    def exit (self, sig_num=None, stack_frame=None):
         """SIGINT/KeyboardInterrupt handler."""
-        self.server_process.terminate()
+        if hasattr(self, "server_process"):
+            self.server_process.terminate()
         print("\nBye!", file=sys.stderr)
         sys.exit()
 
 
     def run_server (self, host, port, config):
-        """WSGIServer main loop."""
+        """WSGIServer config and main loop."""
         httpd = make_server(
             host, port, Application(config),
             handler_class=FUPRequestHandler
         )
         if config["ssl"]:
-            if not os.path.isfile(config["key"]):
-                print(
-                    "Provide a valid path to SSL key file " + \
-                    "using --key argument.",
-                    file=sys.stderr
-                )
-                os.kill(config["ppid"], signal.SIGINT)
-                return
-            if not os.path.isfile(config["cert"]):
-                print(
-                    "Provide a valid path to SSL certificate " + \
-                    "file using --cert argument.",
-                    file=sys.stderr
-                )
-                os.kill(config["ppid"], signal.SIGINT)
-                return
             try:
                 import ssl
                 httpd.socket = \
@@ -835,10 +838,6 @@ class Main(object):
                 )
                 os.kill(config["ppid"], signal.SIGINT)
                 return
-        elif os.path.isfile(config["key"]) or os.path.isfile(config["cert"]):
-            print("Use --ssl switch.", file=sys.stderr)
-            os.kill(config["ppid"], signal.SIGINT)
-            return
         print(
             "listening on %s:%u%s"  % (
                 host, httpd.server_port,
@@ -855,7 +854,7 @@ class Main(object):
             while True:
                 input()
         except EOFError:
-            self.exit_handler()
+            self.exit()
 
 
 
