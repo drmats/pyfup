@@ -827,7 +827,7 @@ class Main(object):
                 )
                 os.kill(config["ppid"], signal.SIGINT)
                 return
-            except:                
+            except:
                 e = sys.exc_info()
                 print(
                     "Error: %s - \"%s\"." % (e[0], e[1].strerror),
@@ -841,7 +841,7 @@ class Main(object):
             return
         print(
             "listening on %s:%u%s"  % (
-                host, port,
+                host, httpd.server_port,
                 " (SSL enabled)" if config["ssl"] else ""
             ),
             file=sys.stderr
