@@ -23,9 +23,11 @@ import base64
 import gzip
 import codecs
 import re
+import socket
 
 from ntpath import basename as ntbasename
 from posixpath import basename as posixbasename
+from threading import Thread
 
 from cgi import FieldStorage
 from wsgiref.simple_server import (
@@ -48,7 +50,7 @@ __all__ = [
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 __license__ = "BSD 2-Clause license"
 
 
@@ -667,7 +669,7 @@ class FUPRequestHandler(WSGIRequestHandler):
                     isinstance(a, str) and simple_ascii(a, ord) or
                     not isinstance(a, str) and simple_ascii(a)
                 ):
-                        safe_args.append(a)
+                    safe_args.append(a)
                 else:
                     safe_args.append(
                         "unexpected content (base64): " + codecs.decode(
@@ -687,7 +689,7 @@ class FUPRequestHandler(WSGIRequestHandler):
 
     def log_error (self, format, *args):
         """log an error"""
-        self.log_message(re.sub("(%.)", "\"\\1\"", format), *args)
+        self.log_message(re.sub("(%.)", r"\"\1\"", format), *args)
 
 
 
@@ -704,7 +706,10 @@ class Main(object):
         args = self.parse_args()
         signal.signal(signal.SIGINT, self.exit)
         print(
-            "[%s] -- exit: ctrl+C" % software_version,
+            "[%s pyfup/%s] -- exit: ctrl+C" % (
+                software_version,
+                __version__
+            ),
             file=sys.stderr
         )
 
@@ -727,18 +732,45 @@ class Main(object):
             print("Use --ssl switch.", file=sys.stderr)
             self.exit()
 
-        self.server_process = Process(
-            target=self.run_server,
-            args=(args.host, args.port, {
-                "no_js" : args.no_js,
-                "auth" : args.auth,
-                "ppid" : os.getpid(),
-                "ssl" : args.ssl,
-                "key" : args.key,
-                "cert" : args.cert
-            })
+        q = Queue()
+        server_config = {
+            "ppid" : os.getpid(),
+            "no_js" : args.no_js,
+            "auth" : args.auth,
+            "ssl" : args.ssl,
+            "key" : args.key,
+            "cert" : args.cert
+        }
+
+        if args.ssl and args.use_sproxy:
+            self.server_process = Process(
+                target=self.run_server,
+                args=(q, "127.0.0.1", 0, server_config)
+            )
+            self.server_process.start()
+            self.proxy_process = Process(
+                target=self.run_sproxy,
+                args=(args.host, args.port, {
+                    "server_port" : q.get()
+                })
+            )
+            self.proxy_process.start()
+        else:
+            self.server_process = Process(
+                target=self.run_server,
+                args=(q, args.host, args.port, server_config)
+            )
+            self.server_process.start()
+
+        print(
+            "listening on %s:%u%s%s"  % (
+                args.host, args.port,
+                " (SSL enabled)" if args.ssl else "",
+                " [through sproxy]" if args.ssl and args.use_sproxy else ""
+            ),
+            file=sys.stderr
         )
-        self.server_process.start()
+
         self.main_loop()
 
 
@@ -778,6 +810,13 @@ class Main(object):
                 help="do not use JavaScript on client side"
             )
             argparser.add_argument(
+                "--use-sproxy", action="store_true", default=False,
+                help=dedent("""\
+                    use \"sniffing\" proxy for autodetect and switch to SSL \
+                    (EXPERIMENTAL FEATURE)"""
+                )
+            )
+            argparser.add_argument(
                 "--host", action="store", default="0.0.0.0",
                 type=str, help="specify host [default: 0.0.0.0]"
             )
@@ -791,6 +830,7 @@ class Main(object):
                 host = "0.0.0.0"
                 port = 8000
                 no_js = False
+                use_sproxy = False
                 auth = "__NO_AUTH__"
                 ssl = False
                 key = "__NO_KEY__"
@@ -800,13 +840,15 @@ class Main(object):
 
     def exit (self, sig_num=None, stack_frame=None):
         """SIGINT/KeyboardInterrupt handler."""
+        if hasattr(self, "proxy_process"):
+            self.proxy_process.terminate()
         if hasattr(self, "server_process"):
             self.server_process.terminate()
         print("\nBye!", file=sys.stderr)
         sys.exit()
 
 
-    def run_server (self, host, port, config):
+    def run_server (self, q, host, port, config):
         """WSGIServer config and main loop."""
         httpd = make_server(
             host, port, Application(config),
@@ -838,14 +880,147 @@ class Main(object):
                 )
                 os.kill(config["ppid"], signal.SIGINT)
                 return
-        print(
-            "listening on %s:%u%s"  % (
-                host, httpd.server_port,
-                " (SSL enabled)" if config["ssl"] else ""
-            ),
-            file=sys.stderr
-        )
+        q.put(httpd.server_port)
         httpd.serve_forever()
+
+
+    def run_sproxy (self, host, port, config):
+        """Protocol "sniffer" for HTTPS redirection."""
+
+        http_verbs = [
+            "OPTIONS", "GET", "HEAD", "POST",
+            "PUT", "DELETE", "TRACE", "CONNECT"
+        ]
+
+        def quiet (fun, *args):
+            try:
+                fun(*args)
+            except:
+                pass
+
+        def redirect (host):
+            return dedent("""\
+                HTTP/1.1 307 Temporary Redirect\r\n\
+                Location: https://%s/\r\n\
+                Server: pyfup/%s\r\n\
+                Content-Type: text/plain; charset=utf-8\r\n\
+                Content-Length: 10\r\n\
+                \r\n\
+                Use HTTPS.""" % (host, __version__)
+            )
+
+        def bad_request ():
+            return dedent("""\
+                HTTP/1.1 400 Bad Request\r\n\
+                Server: pyfup/%s\r\n\
+                Content-Type: text/plain; charset=utf-8\r\n\
+                Content-Length: 12\r\n\
+                \r\n\
+                Bad Request.""" % __version__
+            )
+
+        def server_handler (client_connection, server_connection):
+            while True:
+                try:
+                    data = server_connection.recv(2**12)
+                    if data:
+                        client_connection.sendall(data)
+                    else:
+                        break
+                except:
+                    break
+            quiet(server_connection.shutdown, (socket.SHUT_RDWR))
+            quiet(client_connection.shutdown, (socket.SHUT_RDWR))
+
+        def request_handler (client_connection, addr):
+            server_connection = None
+            server_handler_thread = None
+            while True:
+                try:
+                    data = client_connection.recv(2**10)
+                    if data:
+                        if not server_connection and True in (
+                            sv for sv in map(
+                                lambda v: data.startswith(utf8_encode(v)),
+                                http_verbs
+                            )
+                        ):
+                            # we've got an HTTP request
+                            match = re.compile(
+                                "^Host: ([a-zA-Z0-9\.\-:]+)\r?$",
+                                re.M
+                            ).search(codecs.decode(data, "utf-8"))
+                            if match:
+                                client_connection.sendall(
+                                    utf8_encode(redirect(match.group(1)))
+                                )
+                                print(
+                                    ("%s - - [%s] sproxy: " + \
+                                    "\"redirect to HTTPS\" 307 10") % (
+                                        addr[0],
+                                        time.strftime("%d/%b/%Y %H:%M:%S")
+                                    ), file=sys.stderr
+                                )
+                            else:
+                                client_connection.sendall(
+                                    utf8_encode(bad_request())
+                                )
+                                print(
+                                    ("%s - - [%s] sproxy: " + \
+                                    "\"No 'Host' Header\" 400 12") % (
+                                        addr[0],
+                                        time.strftime("%d/%b/%Y %H:%M:%S")
+                                    ), file=sys.stderr
+                                )
+                            quiet(
+                                client_connection.shutdown,
+                                (socket.SHUT_RDWR)
+                            )
+                            break
+                        else:
+                            # we've (probably) got an HTTPS request
+                            if not server_connection:
+                                server_connection = socket.socket(
+                                    socket.AF_INET, socket.SOCK_STREAM
+                                )
+                                server_connection.connect(
+                                    ("127.0.0.1", config["server_port"])
+                                )
+                                server_handler_thread = Thread(
+                                    target=server_handler,
+                                    args=(
+                                        client_connection,
+                                        server_connection
+                                    )
+                                )
+                                server_handler_thread.start()
+                            server_connection.sendall(data)
+                    else:
+                        break
+                except:
+                    break
+            if server_handler_thread:
+                server_handler_thread.join()
+                server_handler_thread = None
+            if server_connection:
+                server_connection.close()
+                server_connection = None
+            client_connection.close()
+
+        sproxy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sproxy.bind((host, port))
+        sproxy.listen(5)
+        while True:
+            client_connection, addr = sproxy.accept()
+            print(
+                "%s - - - sproxy: \"connection\"" % (
+                    addr[0]
+                ), file=sys.stderr
+            )
+            Thread(
+                target=request_handler,
+                args=(client_connection, addr)
+            ).start()
 
 
     def main_loop (self):
@@ -861,7 +1036,7 @@ class Main(object):
 
 # ...
 if __name__ == "__main__":
-    from multiprocessing import Process
+    from multiprocessing import Process, Queue
     Main()
 elif __name__ != "__parents_main__":
     app = Application()

@@ -47,7 +47,7 @@ the latest version.
 
         $ python fup.py --help
         usage: fup.py [-h] [-v] [--ssl] [-k KEY] [-c CERT] [-a AUTH] [--no-js]
-                      [--host HOST]
+                      [--use-sproxy] [--host HOST]
                       [port]
 
         Basic file upload WSGI application.
@@ -64,6 +64,8 @@ the latest version.
           -a AUTH, --auth AUTH  specify username:password that will be required from
                                 user agent [default: no authentication required]
           --no-js               do not use JavaScript on client side
+          --use-sproxy          use "sniffing" proxy for autodetect and switch to SSL
+                                (EXPERIMENTAL FEATURE)
           --host HOST           specify host [default: 0.0.0.0]
 
         More at: https://github.com/drmats/pyfup
