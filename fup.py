@@ -141,11 +141,11 @@ except ImportError:
 # utf8_encode function below.
 if hasattr(__builtins__, "unicode"):
     def utf8_encode (s, e="strict"):
-        """python 2.x utf-8 encoder"""
+        """Python 2.x utf-8 encoder."""
         return unicode(s, "utf-8").encode("utf-8", e)
 else:
     def utf8_encode (s, e="strict"):
-        """python 3.x utf-8 encoder"""
+        """Python 3.x utf-8 encoder."""
         return s.encode("utf-8", errors=e)
 
 
@@ -395,10 +395,10 @@ class Template(object):
 # of storing all files in a temporary directory.
 class FUPFieldStorage(FieldStorage):
 
-    """multipart/form-data request body parser"""
+    """A multipart/form-data request body parser."""
 
     def __init__ (self, *args, **kwargs):
-        """call parent constructor and store reference to the environ"""
+        """Call parent constructor and store reference to the environ."""
         if "environ" in kwargs:
             self.__orig_env = kwargs["environ"]
         elif len(args) >= 3:
@@ -411,7 +411,7 @@ class FUPFieldStorage(FieldStorage):
 
 
     def make_file (self, binary=None):
-        """create secure tempfile in the current directory"""
+        """Create secure tempfile in the current directory."""
         self.secure_filename = ntbasename(posixbasename(self.filename))
         self.temp_filename = self.secure_filename + ".part"
         while os.path.exists(self.temp_filename):
@@ -539,7 +539,7 @@ class Application(object):
     """Base class for a web application."""
 
     def __init__ (self, config={}):
-        """"url routing" and application config setup"""
+        """An "url routing" and application config setup."""
         self.urls = {
             "/" : View.index,
             "/favicon.ico" : View.template(
@@ -561,7 +561,7 @@ class Application(object):
 
 
     def authorized (self, env):
-        """check if user agent authorized itself properly"""
+        """Check if user agent authorized itself properly."""
         try:
             return (
                 self.config["auth"] == "__NO_AUTH__" or (
@@ -631,7 +631,7 @@ class FUPRequestHandler(WSGIRequestHandler):
     """WSGI protocol."""
 
     def handle (self):
-        """default request handler"""
+        """Default request handler."""
         # python 2.x and 3.x compatible try-except code
         try:
             WSGIRequestHandler.handle(self)
@@ -651,7 +651,7 @@ class FUPRequestHandler(WSGIRequestHandler):
 
 
     def log_message (self, format, *args):
-        """used by all default logging functions"""
+        """Used by all default logging functions."""
         def simple_ascii (s, aux=(lambda x: x)):
             """ord 32 - 126 check"""
             answer = True
@@ -688,7 +688,7 @@ class FUPRequestHandler(WSGIRequestHandler):
 
 
     def log_error (self, format, *args):
-        """log an error"""
+        """Log an error."""
         self.log_message(re.sub("(%.)", r"\"\1\"", format), *args)
 
 
