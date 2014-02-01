@@ -79,33 +79,33 @@ the latest version.
         More at: https://github.com/drmats/pyfup
 
 
-  * with [werkzeug](http://werkzeug.pocoo.org/):
+  * with [**werkzeug**](http://werkzeug.pocoo.org/):
 
         $ python -m werkzeug.serving [-b HOST:PORT] fup:app
 
-  * with [gunicorn](http://gunicorn.org/):
+  * with [**gunicorn**](http://gunicorn.org/):
     
         $ gunicorn [-b HOST] --access-logfile - fup:app
 
   * in order to be able to accept big files and avoid "worker timeouts" it is
-  desirable to use asynchronous ([eventlet](http://eventlet.net/),
-  [gevent](http://www.gevent.org/) or
-  [tornado](http://www.tornadoweb.org/))
+  desirable to use asynchronous ([**eventlet**](http://eventlet.net/),
+  [**gevent**](http://www.gevent.org/) or
+  [**tornado**](http://www.tornadoweb.org/))
   [worker classes](http://docs.gunicorn.org/en/latest/settings.html#worker-processes):
 
         $ gunicorn [-b HOST] -k eventlet --access-logfile - fup:app
         $ gunicorn [-b HOST] -k gevent --access-logfile - fup:app
         $ gunicorn [-b HOST] -k tornado fup:app
 
-  * with [Twisted Web](https://twistedmatrix.com/trac/wiki/TwistedWeb):
+  * with [**Twisted Web**](https://twistedmatrix.com/trac/wiki/TwistedWeb):
 
         $ twistd -n web [--port PORT] --wsgi fup.app
 
-  * with [uWSGI](http://uwsgi-docs.readthedocs.org/en/latest/):
+  * with [**uWSGI**](http://uwsgi-docs.readthedocs.org/en/latest/):
 
         $ uwsgi --plugin python --http :[PORT] --wsgi-file fup.py --callable app
 
-  * with [waitress](http://docs.pylonsproject.org/projects/waitress/en/latest/):
+  * with [**waitress**](http://docs.pylonsproject.org/projects/waitress/en/latest/):
 
         $ waitress-serve --port [PORT] fup:app
 
@@ -115,7 +115,7 @@ the latest version.
 ## notes on SSL
 
 The easiest way to generate private key and self-signed certificate with
-[OpenSSL](https://www.openssl.org/):
+[**OpenSSL**](https://www.openssl.org/):
 
     $ openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout ssl.key -out ssl.cert
 
