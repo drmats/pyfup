@@ -121,7 +121,7 @@ and on first connection **pyfup** can log a request error
 ## license
 
 **pyfup** is released under the BSD 2-Clause license. See the
-[LICENSE](https://github.com/drmats/pyfup/blob/master/LICENSE)
+[LICENSE](https://raw2.github.com/drmats/pyfup/master/LICENSE)
 for more details.
 
 
