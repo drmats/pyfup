@@ -1,5 +1,13 @@
 # pyfup
 
+<a href="https://github.com/drmats/pyfup/">
+    <img
+        src="https://raw2.github.com/drmats/pyfup/master/icon.png"
+        align="left"
+        hspace="10"
+    >
+</a>
+
 Basic file upload WSGI application (python 2.6.x/2.7.x/3.3.x)
 
 This script brings up a
