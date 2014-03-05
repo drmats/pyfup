@@ -612,9 +612,10 @@ class Application(object):
             env["HTTP_ACCEPT_ENCODING"].find("gzip") > -1
         ):
             body = GzipGlue.compress(body)
-            headers.append(
-                ("Content-Encoding", "gzip")
-            )
+            headers += [
+                ("Content-Encoding", "gzip"),
+                ("Vary", "Content-Encoding")
+            ]
         headers.append(
             ("Content-Length", str(len(body)))
         )
