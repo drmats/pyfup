@@ -2,7 +2,7 @@
 
 <a href="https://github.com/drmats/pyfup/">
     <img
-        src="https://raw2.github.com/drmats/pyfup/master/icon.png"
+        src="https://raw.githubusercontent.com/drmats/pyfup/master/icon.png"
         align="left"
         hspace="10"
     >
