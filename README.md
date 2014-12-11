@@ -43,7 +43,7 @@ between machines over [HTTP protocol](http://www.ietf.org/rfc/rfc2616.txt).
 ## installation
 
 No installation is necessary. Just
-[download](https://raw.github.com/drmats/pyfup/master/fup.py)
+[download](https://raw.githubusercontent.com/drmats/pyfup/master/fup.py)
 the latest version.
 
 
@@ -129,7 +129,7 @@ and on first connection **pyfup** can log a request error
 ## license
 
 **pyfup** is released under the BSD 2-Clause license. See the
-[LICENSE](https://raw2.github.com/drmats/pyfup/master/LICENSE)
+[LICENSE](https://raw.githubusercontent.com/drmats/pyfup/master/LICENSE)
 for more details.
 
 
