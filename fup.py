@@ -8,7 +8,7 @@ This script brings up a simple_server from python's wsgiref package
 and runs a really simple web application on it. It allows to upload
 any file using multipart/form-data encoding. Don't use it in production
 environment as it has not been reviewed for security issues, however
-it's handy for ad-hoc file transfers between machines over HTTP protocol.
+it's handy for ad-hoc file transfers between machines over HTTP(s) protocol.
 
 https://github.com/drmats/pyfup
 """
@@ -25,6 +25,7 @@ import codecs
 import re
 import socket
 
+from textwrap import dedent
 from ntpath import basename as ntbasename
 from posixpath import basename as posixbasename
 from threading import Thread
@@ -50,8 +51,22 @@ __all__ = [
 
 __author__ = "drmats"
 __copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.5.3"
+__version__ = "0.5.4"
 __license__ = "BSD 2-Clause license"
+
+
+
+
+# python 2.x lacks textwrap.indent function
+try:
+    from textwrap import indent
+except ImportError:
+    def indent (s, i):
+        """Emulates texwrap.indent from python 3.x."""
+        return "\n".join(map(
+            lambda l:  i + l  if  l != ""  else  l,
+            s.split("\n")
+        ))
 
 
 
@@ -112,37 +127,22 @@ else:
 
 
 
-# python 2.x lacks textwrap.indent function
-from textwrap import dedent
-try:
-    from textwrap import indent
-except ImportError:
-    def indent (s, i):
-        """Emulates texwrap.indent from python 3.x."""
-        return "\n".join(map(
-            lambda l:  i + l  if  l != ""  else  l,
-            s.split("\n")
-        ))
-
-
-
-
 # python 2/3 unicode issues:
 # Using "from __future__ import unicode_literals" statement in python 2.x
-# is causing that all string literals are actually of type <type "unicode">
+# is causing all string literals to be actually of type <type "unicode">
 # therefore they should be encoded in all places which require type
 # <type "str"> (e.g. "start_response" callback). But in python 3.x that
 # approach results in type <class "bytes"> therefore TypeError is thrown.
 # Unfortunately u"..." syntax is forbidden in python <3.3.x.
-# So it's better to leave string literals at their default type behaviour
+# So it's better to leave string literals with their default type behaviour
 # in python 2.x/3.x but just handle the encoding. Python 2 defines "unicode"
 # function for converting <type "str"> to <type "unicode"> which then behaves
-# correctly while encoding back to "utf-8". Thus two definitions of 
+# correctly while encoding back to "utf-8". Thus two definitions of
 # utf8_encode function below.
 if hasattr(__builtins__, "unicode"):
     def utf8_encode (s, e="strict"):
         """Python 2.x utf-8 encoder."""
-        return unicode(s, "utf-8").encode("utf-8", e)
+        return unicode(s, "utf-8").encode("utf-8", e)  # noqa
 else:
     def utf8_encode (s, e="strict"):
         """Python 3.x utf-8 encoder."""
@@ -240,7 +240,12 @@ class Template(object):
             Date, document, File, FormData, Math,
             XMLHttpRequest, XMLHttpRequestUpload, window
         */
-        /*jslint white: true */
+        /*jslint
+            browser: true,
+            this: true,
+            multivar: true,
+            white: true
+        */
         (function (u) {
             "use strict";
             u.onFsChange = function () { u.file = this.files.item(0); };
@@ -281,7 +286,8 @@ class Template(object):
                 u.submit.addEventListener('click', function (evt) {
                     evt.stopPropagation(); evt.preventDefault();
                     if (u.file) {
-                        this.disabled = u.fs.disabled = true;
+                        u.fs.disabled = true;
+                        this.disabled = u.fs.disabled;
                         u.message.innerHTML = 'Uploading...';
                         u.pf.style.opacity = 1;
                         u.fd = new FormData();
@@ -346,7 +352,8 @@ class Template(object):
                         }, false);
                         u.xhr.open('POST', 'upload', true);
                         u.loaded = 0;
-                        u.start = u.now = Date.now();
+                        u.now = Date.now();
+                        u.start = u.now;
                         u.xhr.send(u.fd);
                     } else {
                         u.message.innerHTML = 'No file selected.';
@@ -357,7 +364,7 @@ class Template(object):
             if (
                 window.addEventListener  &&  window.removeEventListener  &&
                 XMLHttpRequest  &&  XMLHttpRequestUpload  &&  FormData  &&
-                Date  &&  Date.now  &&  File  && 
+                Date  &&  Date.now  &&  File  &&
                 document.querySelector  &&  document.createElement
             ) {
                 window.addEventListener('load', u.init, false);
@@ -374,14 +381,14 @@ class Template(object):
                 <!DOCTYPE html>
                 <html dir="ltr" lang="en-US">
                     <head>
-            """) + \
-            indent(head, Template.indent*2) + \
+            """) +
+            indent(head, Template.indent*2) +
             indent(dedent("""\
                     </head>
                     <body>
                         <h2><div class="logo">&nbsp;</div>pyfup</h2>
-            """), Template.indent) + \
-            indent(body, Template.indent*2) + \
+            """), Template.indent) +
+            indent(body, Template.indent*2) +
             dedent("""\
                     </body>
                 </html>"""
@@ -419,12 +426,12 @@ class FUPFieldStorage(FieldStorage):
             self.temp_filename = self.secure_filename + ".part"
         print(
             "%s - - [%s] --> receiving \"%s\" (%s) %s" % (
-                self.__orig_env["REMOTE_ADDR"] \
+                self.__orig_env["REMOTE_ADDR"]
                     if "REMOTE_ADDR" in self.__orig_env else "-",
                 time.strftime("%d/%b/%Y %H:%M:%S"),
                 self.secure_filename,
                 self.headers["content-type"],
-                self.__orig_env["CONTENT_LENGTH"] \
+                self.__orig_env["CONTENT_LENGTH"]
                     if "CONTENT_LENGTH" in self.__orig_env else ""
             ),
             file=sys.stderr
@@ -497,7 +504,7 @@ class View(object):
         form = FUPFieldStorage(fp=env["wsgi.input"], environ=env)
         form_file = form["file"] if "file" in form else None
 
-        if form_file != None and form_file.filename:
+        if form_file is not None and form_file.filename:
             form_file.file.close()
 
             fn = form_file.secure_filename
@@ -506,9 +513,10 @@ class View(object):
             os.rename(form_file.temp_filename, fn)
 
             status = "201 Created"
-            message = \
-                "The file \"%s\" was uploaded successfully!" \
+            message = (
+                "The file \"%s\" was uploaded successfully!"
                     % form_file.filename
+            )
             bytes_read = os.stat(fn).st_size
 
         else:
@@ -598,8 +606,7 @@ class Application(object):
                 "404 Not Found", [
                     ("Content-Type", "text/plain; charset=utf-8")
                 ], utf8_encode(
-                    "No action for \"%s\" route defined." \
-                        % env["PATH_INFO"]
+                    "No action for \"%s\" route defined." % env["PATH_INFO"]
                 )
             )
 
@@ -643,8 +650,8 @@ class FUPRequestHandler(WSGIRequestHandler):
                     self.client_address[0],
                     time.strftime("%d/%b/%Y %H:%M:%S"),
                     e[0],
-                    utf8_encode(e[1].reason, e="replace") \
-                        if hasattr(e[1], "reason") \
+                    utf8_encode(e[1].reason, e="replace")
+                        if hasattr(e[1], "reason")
                         else utf8_encode(e[1].strerror, e="replace")
                 ),
                 file=sys.stderr
@@ -717,14 +724,14 @@ class Main(object):
         if args.ssl:
             if not os.path.isfile(args.key):
                 print(
-                    "Provide a valid path to SSL key file " + \
+                    "Provide a valid path to SSL key file " +
                     "using --key argument.",
                     file=sys.stderr
                 )
                 self.exit()
             if not os.path.isfile(args.cert):
                 print(
-                    "Provide a valid path to SSL certificate " + \
+                    "Provide a valid path to SSL certificate " +
                     "file using --cert argument.",
                     file=sys.stderr
                 )
@@ -764,7 +771,7 @@ class Main(object):
             self.server_process.start()
 
         print(
-            "listening on %s:%u%s%s"  % (
+            "listening on %s:%u%s%s" % (
                 args.host, args.port,
                 " (SSL enabled)" if args.ssl else "",
                 " [through sproxy]" if args.ssl and args.use_sproxy else ""
@@ -858,14 +865,13 @@ class Main(object):
         if config["ssl"]:
             try:
                 import ssl
-                httpd.socket = \
-                    ssl.wrap_socket(
-                        httpd.socket,
-                        keyfile=config["key"],
-                        certfile=config["cert"],
-                        cert_reqs=ssl.CERT_NONE,
-                        server_side=True
-                    )
+                httpd.socket = ssl.wrap_socket(
+                    httpd.socket,
+                    keyfile=config["key"],
+                    certfile=config["cert"],
+                    cert_reqs=ssl.CERT_NONE,
+                    server_side=True
+                )
             except ImportError:
                 print(
                     "SSL is not supported on this system.",
@@ -956,22 +962,28 @@ class Main(object):
                                     utf8_encode(redirect(match.group(1)))
                                 )
                                 print(
-                                    ("%s - - [%s] sproxy: " + \
-                                    "\"redirect to HTTPS\" 307 10") % (
+                                    (
+                                        "%s - - [%s] sproxy: " +
+                                        "\"redirect to HTTPS\" 307 10"
+                                    ) % (
                                         addr[0],
                                         time.strftime("%d/%b/%Y %H:%M:%S")
-                                    ), file=sys.stderr
+                                    ),
+                                    file=sys.stderr
                                 )
                             else:
                                 client_connection.sendall(
                                     utf8_encode(bad_request())
                                 )
                                 print(
-                                    ("%s - - [%s] sproxy: " + \
-                                    "\"No 'Host' Header\" 400 12") % (
+                                    (
+                                        "%s - - [%s] sproxy: " +
+                                        "\"No 'Host' Header\" 400 12"
+                                    ) % (
                                         addr[0],
                                         time.strftime("%d/%b/%Y %H:%M:%S")
-                                    ), file=sys.stderr
+                                    ),
+                                    file=sys.stderr
                                 )
                             quiet(
                                 client_connection.shutdown,
@@ -1014,9 +1026,8 @@ class Main(object):
         while True:
             client_connection, addr = sproxy.accept()
             print(
-                "%s - - - sproxy: \"connection\"" % (
-                    addr[0]
-                ), file=sys.stderr
+                "%s - - - sproxy: \"connection\"" % (addr[0]),
+                file=sys.stderr
             )
             Thread(
                 target=request_handler,
