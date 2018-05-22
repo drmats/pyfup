@@ -50,8 +50,8 @@ __all__ = [
 ]
 
 __author__ = "drmats"
-__copyright__ = "copyright (c) 2014, drmats"
-__version__ = "0.5.4"
+__copyright__ = "copyright (c) 2014-2018, drmats"
+__version__ = "0.5.5"
 __license__ = "BSD 2-Clause license"
 
 
@@ -63,6 +63,7 @@ try:
 except ImportError:
     def indent (s, i):
         """Emulates texwrap.indent from python 3.x."""
+
         return "\n".join(map(
             lambda l:  i + l  if  l != ""  else  l,
             s.split("\n")
@@ -80,6 +81,7 @@ class GzipGlue(object):
     @staticmethod
     def _compress_p2 (s):
         """Emulates gzip.compress from python >=3.2."""
+
         osio = StringIO()
         try:
             if hasattr(gzip.GzipFile, "__exit__"):
@@ -97,6 +99,7 @@ class GzipGlue(object):
     @staticmethod
     def _decompress_p2 (s):
         """Emulates gzip.decompress from python >=3.2."""
+
         isio = StringIO(s)
         try:
             if hasattr(gzip.GzipFile, "__exit__"):
@@ -376,6 +379,7 @@ class Template(object):
     @staticmethod
     def html (head=common_head, body=""):
         """Simple full-page HTML generator."""
+
         return (
             dedent("""\
                 <!DOCTYPE html>
@@ -406,6 +410,7 @@ class FUPFieldStorage(FieldStorage):
 
     def __init__ (self, *args, **kwargs):
         """Call parent constructor and store reference to the environ."""
+
         if "environ" in kwargs:
             self.__orig_env = kwargs["environ"]
         elif len(args) >= 3:
@@ -419,6 +424,7 @@ class FUPFieldStorage(FieldStorage):
 
     def make_file (self, binary=None):
         """Create secure tempfile in the current directory."""
+
         self.secure_filename = ntbasename(posixbasename(self.filename))
         self.temp_filename = self.secure_filename + ".part"
         while os.path.exists(self.temp_filename):
@@ -449,6 +455,7 @@ class View(object):
     @staticmethod
     def index (env, config):
         """File upload page with an appropriate html form."""
+
         markup = dedent("""\
             <form
                 action="upload"
@@ -483,6 +490,7 @@ class View(object):
     @staticmethod
     def template (name, content_type, binary=False):
         """Returns static template text."""
+
         if binary:
             def enc (s):
                 return s
@@ -501,6 +509,7 @@ class View(object):
     @staticmethod
     def upload (env, config={}):
         """File upload action (called from an upload form)."""
+
         form = FUPFieldStorage(fp=env["wsgi.input"], environ=env)
         form_file = form["file"] if "file" in form else None
 
@@ -548,6 +557,7 @@ class Application(object):
 
     def __init__ (self, config={}):
         """An "url routing" and application config setup."""
+
         self.urls = {
             "/" : View.index,
             "/favicon.ico" : View.template(
@@ -570,6 +580,7 @@ class Application(object):
 
     def authorized (self, env):
         """Check if user agent authorized itself properly."""
+
         try:
             return (
                 self.config["auth"] == "__NO_AUTH__" or (
@@ -588,6 +599,7 @@ class Application(object):
 
     def dispatch (self, env):
         """Basic, url-based action dispatcher."""
+
         if env["PATH_INFO"] in self.urls:
             if self.authorized(env):
                 return self.urls[env["PATH_INFO"]](env, self.config)
@@ -613,6 +625,7 @@ class Application(object):
 
     def __call__ (self, env, start_response):
         """A callable defined for a WSGI entry point."""
+
         status, headers, body = self.dispatch(env)
         if (
             "HTTP_ACCEPT_ENCODING" in env and
@@ -640,6 +653,7 @@ class FUPRequestHandler(WSGIRequestHandler):
 
     def handle (self):
         """Default request handler."""
+
         # python 2.x and 3.x compatible try-except code
         try:
             WSGIRequestHandler.handle(self)
@@ -660,6 +674,7 @@ class FUPRequestHandler(WSGIRequestHandler):
 
     def log_message (self, format, *args):
         """Used by all default logging functions."""
+
         def simple_ascii (s, aux=(lambda x: x)):
             """ord 32 - 126 check"""
             answer = True
@@ -697,6 +712,7 @@ class FUPRequestHandler(WSGIRequestHandler):
 
     def log_error (self, format, *args):
         """Log an error."""
+
         self.log_message(re.sub("(%.)", r"\"\1\"", format), *args)
 
 
@@ -711,10 +727,18 @@ class Main(object):
 
     def __init__ (self):
         """Program entry point."""
+
+        realhostip = "*"
+        try:
+            from socket import gethostbyname, gethostname
+            realhostip = gethostbyname(gethostname())
+        except:
+            pass
+
         args = self.parse_args()
         signal.signal(signal.SIGINT, self.exit)
         print(
-            "[%s pyfup/%s] -- exit: ctrl+C" % (
+            "[%s pyfup/%s]" % (
                 software_version,
                 __version__
             ),
@@ -771,8 +795,8 @@ class Main(object):
             self.server_process.start()
 
         print(
-            "listening on %s:%u%s%s" % (
-                args.host, args.port,
+            "listening on %s:%u <%s:%u>%s%s" % (
+                args.host, args.port, realhostip, args.port,
                 " (SSL enabled)" if args.ssl else "",
                 " [through sproxy]" if args.ssl and args.use_sproxy else ""
             ),
@@ -784,6 +808,7 @@ class Main(object):
 
     def parse_args (self):
         """Command-line argument parser."""
+
         try:
             from argparse import ArgumentParser
             argparser = ArgumentParser(
@@ -848,6 +873,7 @@ class Main(object):
 
     def exit (self, sig_num=None, stack_frame=None):
         """SIGINT/KeyboardInterrupt handler."""
+
         if hasattr(self, "proxy_process"):
             self.proxy_process.terminate()
         if hasattr(self, "server_process"):
@@ -858,10 +884,12 @@ class Main(object):
 
     def run_server (self, q, host, port, config):
         """WSGIServer config and main loop."""
+
         httpd = make_server(
             host, port, Application(config),
             handler_class=FUPRequestHandler
         )
+
         if config["ssl"]:
             try:
                 import ssl
@@ -1037,6 +1065,7 @@ class Main(object):
 
     def main_loop (self):
         """Main process loop (just to keep it alive)."""
+
         try:
             while True:
                 input()
