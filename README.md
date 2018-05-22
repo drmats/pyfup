@@ -41,6 +41,12 @@ between machines over [HTTP protocol](http://www.ietf.org/rfc/rfc2616.txt).
 [![GitHub code size](https://img.shields.io/github/languages/code-size/drmats/pyfup.svg)](https://github.com/drmats/pyfup)
 [![GitHub tag](https://img.shields.io/github/tag/drmats/pyfup.svg)](https://github.com/drmats/pyfup)
 
+```bash
+$ python3 fup.py
+[WSGIServer/0.2 CPython/3.6.5 pyfup/0.5.5]
+listening on 0.0.0.0:8000 <192.168.1.13:8000>
+```
+
 <br />
 
 
