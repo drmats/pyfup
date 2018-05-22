@@ -37,6 +37,12 @@ Don't use it in production environment as it has not been reviewed
 for security issues, however it's handy for ad-hoc file transfers
 between machines over [HTTP protocol](http://www.ietf.org/rfc/rfc2616.txt).
 
+[![GitHub top language](https://img.shields.io/github/languages/top/drmats/pyfup.svg)](https://github.com/drmats/pyfup)
+[![GitHub code size](https://img.shields.io/github/languages/code-size/drmats/pyfup.svg)](https://github.com/drmats/pyfup)
+[![GitHub tag](https://img.shields.io/github/tag/drmats/pyfup.svg)](https://github.com/drmats/pyfup)
+
+<br />
+
 
 
 
@@ -53,61 +59,79 @@ the latest version.
 
   * standalone:
 
-        $ python fup.py --help
-        usage: fup.py [-h] [-v] [--ssl] [-k KEY] [-c CERT] [-a AUTH] [--no-js]
-                      [--use-sproxy] [--host HOST]
-                      [port]
+    ```
+    $ python fup.py --help
+    usage: fup.py [-h] [-v] [--ssl] [-k KEY] [-c CERT] [-a AUTH] [--no-js]
+                    [--use-sproxy] [--host HOST]
+                    [port]
 
-        Basic file upload WSGI application.
+    Basic file upload WSGI application.
 
-        positional arguments:
-          port                  specify alternate port [default: 8000]
+    positional arguments:
+        port                  specify alternate port [default: 8000]
 
-        optional arguments:
-          -h, --help            show this help message and exit
-          -v, --version         show program's version number and exit
-          --ssl                 use SSL
-          -k KEY, --key KEY     path to SSL key file
-          -c CERT, --cert CERT  path to SSL certificate file
-          -a AUTH, --auth AUTH  specify username:password that will be required from
-                                user agent [default: no authentication required]
-          --no-js               do not use JavaScript on client side
-          --use-sproxy          use "sniffing" proxy for autodetect and switch to SSL
-                                (EXPERIMENTAL FEATURE)
-          --host HOST           specify host [default: 0.0.0.0]
+    optional arguments:
+        -h, --help            show this help message and exit
+        -v, --version         show program's version number and exit
+        --ssl                 use SSL
+        -k KEY, --key KEY     path to SSL key file
+        -c CERT, --cert CERT  path to SSL certificate file
+        -a AUTH, --auth AUTH  specify username:password that will be required from
+                            user agent [default: no authentication required]
+        --no-js               do not use JavaScript on client side
+        --use-sproxy          use "sniffing" proxy for autodetect and switch to SSL
+                            (EXPERIMENTAL FEATURE)
+        --host HOST           specify host [default: 0.0.0.0]
 
-        More at: https://github.com/drmats/pyfup
+    More at: https://github.com/drmats/pyfup
+    ```
 
 
   * with [**werkzeug**](http://werkzeug.pocoo.org/):
 
-        $ python -m werkzeug.serving [-b HOST:PORT] fup:app
+    ```
+    $ python -m werkzeug.serving [-b HOST:PORT] fup:app
+    ```
+
 
   * with [**gunicorn**](http://gunicorn.org/):
-    
-        $ gunicorn [-b HOST] --access-logfile - fup:app
+
+    ```
+    $ gunicorn [-b HOST] --access-logfile - fup:app
+    ```
+
 
   * in order to be able to accept big files and avoid "worker timeouts" it is
-  desirable to use asynchronous ([**eventlet**](http://eventlet.net/),
-  [**gevent**](http://www.gevent.org/) or
+  desirable to use asynchronous ([**eventlet**](http://eventlet.net/) or
   [**tornado**](http://www.tornadoweb.org/))
   [worker classes](http://docs.gunicorn.org/en/latest/settings.html#worker-processes):
 
-        $ gunicorn [-b HOST] -k eventlet --access-logfile - fup:app
-        $ gunicorn [-b HOST] -k gevent --access-logfile - fup:app
-        $ gunicorn [-b HOST] -k tornado fup:app
+    ```
+    $ gunicorn [-b HOST] -k eventlet --access-logfile - fup:app
+    $ gunicorn [-b HOST] -k gevent --access-logfile - fup:app
+    $ gunicorn [-b HOST] -k tornado fup:app
+    ```
+
 
   * with [**Twisted Web**](https://twistedmatrix.com/trac/wiki/TwistedWeb):
 
-        $ twistd -n web [--port PORT] --wsgi fup.app
+    ```
+    $ twistd -n web [--port PORT] --wsgi fup.app
+    ```
+
 
   * with [**uWSGI**](http://uwsgi-docs.readthedocs.org/en/latest/):
 
-        $ uwsgi --plugin python --http :[PORT] --wsgi-file fup.py --callable app
+    ```
+    $ uwsgi --plugin python --http :[PORT] --wsgi-file fup.py --callable app
+    ```
+
 
   * with [**waitress**](http://docs.pylonsproject.org/projects/waitress/en/latest/):
 
-        $ waitress-serve --port [PORT] fup:app
+    ```
+    $ waitress-serve --port [PORT] fup:app
+    ```
 
 
 
@@ -117,7 +141,9 @@ the latest version.
 The easiest way to generate private key and self-signed certificate with
 [**OpenSSL**](https://www.openssl.org/):
 
-    $ openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout ssl.key -out ssl.cert
+```
+$ openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout ssl.key -out ssl.cert
+```
 
 Beware that browser will complain that it can't confirm site's identity
 and on first connection **pyfup** can log a request error
