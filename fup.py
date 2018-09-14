@@ -145,6 +145,7 @@ else:
 if hasattr(__builtins__, "unicode"):
     def utf8_encode (s, e="strict"):
         """Python 2.x utf-8 encoder."""
+        # pylint:disable=undefined-variable
         return unicode(s, "utf-8").encode("utf-8", e)  # noqa
 else:
     def utf8_encode (s, e="strict"):
