@@ -58,6 +58,8 @@ No installation is necessary. Just
 [download](https://raw.githubusercontent.com/drmats/pyfup/master/fup.py)
 the latest version.
 
+<br />
+
 
 
 
@@ -139,6 +141,8 @@ the latest version.
     $ waitress-serve --port [PORT] fup:app
     ```
 
+<br />
+
 
 
 
@@ -155,6 +159,8 @@ Beware that browser will complain that it can't confirm site's identity
 and on first connection **pyfup** can log a request error
 "SSLV3_ALERT_CERTIFICATE_UNKNOWN" (this behavior is user-agent dependent).
 
+<br />
+
 
 
 
@@ -163,6 +169,8 @@ and on first connection **pyfup** can log a request error
 **pyfup** is released under the BSD 2-Clause license. See the
 [LICENSE](https://raw.githubusercontent.com/drmats/pyfup/master/LICENSE)
 for more details.
+
+<br />
 
 
 
