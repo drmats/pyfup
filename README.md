@@ -164,6 +164,18 @@ and on first connection **pyfup** can log a request error
 
 
 
+## support
+
+You can support this project via [stellar][stellar] network:
+
+* Payment address: [xcmats*keybase.io][xcmatspayment]
+* Stellar account ID: [`GBYUN4PMACWBJ2CXVX2KID3WQOONPKZX2UL4J6ODMIRFCYOB3Z3C44UZ`][addressproof]
+
+<br />
+
+
+
+
 ## license
 
 **pyfup** is released under the BSD 2-Clause license. See the
@@ -180,3 +192,10 @@ for more details.
 The script was tested and is known to work with python versions 2.7.2, 2.7.3,
 2.7.5, 3.3.0, 3.3.2 and 3.3.3 on linux and windows, but theoretically it should
 work on all 2.6.x, 2.7.x and 3.3.x.
+
+
+
+
+[stellar]: https://learn.stellar.org
+[xcmatspayment]: https://keybase.io/xcmats
+[addressproof]: https://keybase.io/xcmats/sigchain#d0999a36b501c4818c15cf813f5a53da5bfe437875d92262be8d285bbb67614e22
